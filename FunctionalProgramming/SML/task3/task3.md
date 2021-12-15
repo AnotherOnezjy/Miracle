@@ -17,14 +17,6 @@ fun trav Empty = []
 
 编写函数 `listToTree: int list -> tree`，将一个表转换成一棵平衡树。
 
-提示：可调用 `split` 函数，`split` 函数定义如下：
-
-如果 L 非空，则存在 L1, x, L2，满足：
-
-split L = (L1, x, L2) 且
-L = L1 @ x::L2 且
-length(L1) 和 length(L2) 差值小于 1
-
 -   code1
 
 ```sml
@@ -43,10 +35,8 @@ fun split [] = ([], 0, [])
         let
             val(A, y, B) = split L
         in
-            if length(A) > length(B) then
-                (A, x, y::B)
-            else
-                (y::A, x, B)
+            if length(A) > length(B) then (A, x, y::B)
+            else (y::A, x, B)
         end;
 
 (*listToTree: int list -> tree*)
@@ -78,26 +68,22 @@ fun trav Empty = []
 
 (*split: int list -> int list * int list*)
 (*将 list 拆分为长度相差小于 1 的两个 list*)
-fun split [] = ([], 0, [])
-    | split [x] = ([], x, [])
-    | split (x::L) =
+fun split(L:int list) =
         let
-            val(A, y, B) = split L
+            val left = List.take(L, length(L) div 2)
+            val right = List.drop(L, length(L) div 2)
         in
-            if length(A) > length(B) then
-                (A, x, y::B)
-            else
-                (y::A, x, B)
+            if (length(right) = 0) then (left, 0, right)
+            else (left, hd(right), List.drop(right, 1))
         end;
 
-fun listToTree [] = Empty
-    | listToTree (x::L) =
+fun listToTree([]:int list): tree = Empty
+    | listToTree((x:int)::[]): tree = Node(Empty, x, Empty)
+    | listToTree((x:int)::L): tree =
         let
-            val index = List.length L div 2
-            val ltree = List.take(L, index)
-            val rtree = List.drop(L, index)
+            val (L1:int list, y, L2:int list) = split(x::L)
         in
-            Node(listToTree(ltree), x, listToTree(rtree))
+            Node(listToTree(L1), y, listToTree(L2))
         end;
 
 (*测试*)
@@ -131,10 +117,8 @@ fun split [] = ([], 0, [])
         let
             val(A, y, B) = split L
         in
-            if length(A) > length(B) then
-                (A, x, y::B)
-            else
-                (y::A, x, B)
+            if length(A) > length(B) then (A, x, y::B)
+            else (y::A, x, B)
         end;
 
 fun listToTree [] = Empty
@@ -160,19 +144,11 @@ trav test;
 
 -   性能分析
 
-因为每一层交换只需要一个步骤,而树的深度为 n 所以在并行计算时其执行性能为: $span = O(log_2 n)$ $work = O(n)$
+因为每一层交换只需要一个步骤,而树的深度为 d 所以在并行计算时其执行性能为: $span = O(log_2 d)$ ，而 $work = O(d)$
 
 ### 3
 
-编写函数 `binarySearch: tree * int -> bool`。当输出参数 1 为有序树时，如果树中包含值为参数 2 的节点，则返回 true；否则返回 false。要求：程序中请使用函数 `Int.compare`（系统提供），不要使用 `<, =, >`。
-
-```sml
-datatype order = GREATER | EQUAL | LESS
-case Int.compare(x1, x2) of
-    GREATER => (*x1 > x2*)
-    | EQUAL => (*x1 = x2*)
-    | LESS => (*x1 < x2*)
-```
+编写函数 `binarySearch: tree * int -> bool`。当输入参数 1 为有序树时，如果树中包含值为参数 2 的节点，则返回 true；否则返回 false。要求：程序中请使用函数 `Int.compare`（系统提供），不要使用 `<, =, >`。
 
 -   code
 
@@ -208,7 +184,7 @@ heapify: tree -> tree
 
 分析 `SwapDown` 和 `heapify` 两个函数的 `work` 和 `span`。
 
-- code final
+-   code final
 
 ```sml
 datatype tree = Empty | Node of tree * int * tree;
@@ -221,18 +197,16 @@ datatype tree = Empty | Node of tree * int * tree;
 fun treecompare(Empty, Empty): order = EQUAL
     | treecompare(t1, Empty) = LESS
     | treecompare(Empty, t2) = GREATER
-    | treecompare(Node(l1, x, r1), Node(l2, y, r2)) = case Int.compare(x, y) of
-            GREATER => GREATER
-            | _ => LESS;
+    | treecompare(Node(l1, x, r1), Node(l2, y, r2)) = Int.compare(x, y)
 
 (*
  * SwapDown: tree -> tree
- * REQUIRES: a normal tree
+ * REQUIRES: the subtrees of t are both minheaps
  * ENSURES: SwapDown(t) = if t is Empty or all of t's immediate children are empty then just return t, otherwise returns a minheap which contains exactly the elements in t.
  *)
 fun SwapDown(Empty) = Empty
     | SwapDown(Node(Empty, x, Empty)) = Node(Empty, x, Empty)
-    | SwapDown(Node(t1, x, t2)) = 
+    | SwapDown(Node(t1, x, t2)) =
         if treecompare(t1, t2) = LESS then
             let
                 val Node(l1, v1, r1) = t1
@@ -251,10 +225,10 @@ fun SwapDown(Empty) = Empty
 (*
  * trav: 'a tree -> 'a list
  * REQUIRES: a normal tree
- * ENSURES: 
+ * ENSURES:
  *)
 fun trav(Empty): int list = []
-    | trav(T:tree): int list = 
+    | trav(T:tree): int list =
         let
             val Node(l, x, r) = T
         in
@@ -269,7 +243,7 @@ fun trav(Empty): int list = []
 fun heapify(Empty) = Empty
     | heapify(Node(l, x, r)) = SwapDown(Node(SwapDown(l), x, SwapDown(r)));
 
-fun split(L:int list) = 
+fun split(L:int list) =
         let
             val left = List.take(L, length(L) div 2)
             val right = List.drop(L, length(L) div 2)
@@ -291,3 +265,8 @@ val test = [~1, ~2, 3, 4, 5, 6, 7];
 val tmp1 = heapify(listToTree(test));
 val tmp2 = trav(tmp1);
 ```
+
+-   性能分析
+
+1. `SwapDown` 的 `work` 和 `span` 都是 $O(d)$，因为只需要一路 `SwapDown` 下去，取决于树的层数；
+2. `heapify` 的 `work` 是 $O(nd)$，因为最终每个节点都需要 `SwapDown`，`span` 是 $O(d ^ 2)$，因为决定并行时间复杂度的高为 $O(d)$ 的路径上，每一个节点都需要 `SwapDown`。

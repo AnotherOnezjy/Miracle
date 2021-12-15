@@ -1,58 +1,49 @@
+(*树类型定义*)
 datatype tree = Empty | Node of tree * int * tree;
-fun treecompare(Empty, Empty): order = EQUAL
-    | treecompare(t1, Empty) = LESS
-    | treecompare(Empty, t2) = GREATER
-    | treecompare(Node(l1, x, r1), Node(l2, y, r2)) = case Int.compare(x, y) of
-            GREATER => GREATER
-        | _ => LESS;
 
-fun SwapDown(Empty) = Empty
-    | SwapDown(Node(Empty, x, Empty)) = Node(Empty, x, Empty)
-    | SwapDown(Node(t1, x, t2)) = 
-        if treecompare(t1, t2) = LESS then
-            let
-                val Node(l1, v1, r1) = t1
-            in
-                if (x > v1) then Node(SwapDown(Node(l1, x, r1)), v1, t2)
-                else Node(t1, x, t2)
-            end
-        else
-            let
-                val Node(l2, v2, r2) = t2
-            in
-                if (x > v2) then Node(t1, v2, SwapDown(Node(l2, x, r2)))
-                else Node(t1, x, t2)
-            end;
+(*树的中序遍历*)
+fun trav Empty = []
+    | trav(Node(t1, x, t2)) = trav t1 @ (x::trav t2);
 
-fun trav(Empty): int list = []
-    | trav(T:tree): int list = 
+(*split: int list -> int list * int list*)
+(*将 list 拆分为长度相差小于 1 的两个 list*)
+(* fun split [] = ([], 0, [])
+    | split [x] = ([], x, [])
+    | split (x::L) =
         let
-            val Node(l, x, r) = T
+            val(A, y, B) = split L
         in
-            trav(l) @ (x::trav(r))
-        end;
-
-fun heapify(Empty) = Empty
-    | heapify(Node(l, x, r)) = SwapDown(Node(SwapDown(l), x, SwapDown(r)));
-
-fun split(L:int list) = 
+            if length(A) > length(B) then (A, x, y::B)
+            else (y::A, x, B)
+        end; *)
+fun split (L:int list)=
         let
             val left = List.take(L, length(L) div 2)
             val right = List.drop(L, length(L) div 2)
-        in
+        in 
             if (length(right) = 0) then (left, 0, right)
             else (left, hd(right), List.drop(right, 1))
         end;
 
-fun listToTree([]:int list): tree = Empty
-    | listToTree((x:int)::[]): tree = Node(Empty, x, Empty)
-    | listToTree((x:int)::L): tree =
-        let
-            val (L1:int list, y, L2:int list) = split(x::L)
-        in
+fun listToTree [] = Empty
+    | listToTree (x::[]) = Node(Empty, x, Empty)
+    | listToTree (x::L) =
+        let 
+            val (L1, y, L2) = split(x::L)
+        in 
             Node(listToTree(L1), y, listToTree(L2))
         end;
 
-val test = [~1, ~2, 3, 4, 5, 6, 7];
-val tmp1 = heapify(listToTree(test));
-val tmp2 = trav(tmp1);
+fun revT(T) = case T of Empty => Empty
+        | Node(ltree, x, rtree) => Node(revT(rtree), x, revT(ltree));
+
+fun binarySearch(Empty, x) = false
+    | binarySearch(Node(L, v, R), x) = case Int.compare(x, v) of
+            GREATER => binarySearch(R, x)
+            | LESS => binarySearch(L, x)
+            | EQUAL => true;
+
+(*测试*)
+val l1 = [1, 2, 3, 4, 5, 6, 7];
+val t1 = listToTree(l1);
+trav t1;
