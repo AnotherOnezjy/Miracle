@@ -23,7 +23,7 @@ fun toBase (base: int) 0 = []
  * 转换为 b2 进制数列表形式
  * 即满足 toInt b2(convert(b1,b2) L) = toInt b1 L
  *)
-fun convert (b1, b2) L =
+fun convert (b1: int, b2: int) (L: int list) =
         let
             val n = toInt b1 L
         in
