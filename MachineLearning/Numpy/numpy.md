@@ -238,9 +238,9 @@ print(ff32.max)  # 3.4028235e+38
 print(ff32.eps)  # 1.1920929e-07
 ```
 
-## 三、时间日期和时间增量
+# 三、时间日期和时间增量
 
-### datetime64基础
+## datetime64基础
 
 在 numpy 中，我们很方便的将字符串转换成时间日期类型 `datetime64`(`datetime64`已被 python 包含的日期时间库所占用)。`datetime64`是带单位的日期时间类型，其单位如下：
 
@@ -326,7 +326,7 @@ print(a)
 print(a.dtype)  # datetime64[M]
 ```
 
-### datetime64 和 timedelta64 运算
+## datetime64 和 timedelta64 运算
 
 【例】timedelta64 表示两个 datetime64 之间的差。timedelta64 也是带单位的，并且和相减运算中的两个 datetime64 中的较小的单位保持一致。
 
@@ -406,7 +406,7 @@ print(dt2, type(dt2))
 # 2020-06-01 20:05:30 <class 'datetime.datetime'>
 ```
 
-### datetime64 的应用
+## datetime64 的应用
 
 为了允许在只有一周中某些日子有效的上下文中使用日期时间，Numpy 包含一组“busday”（工作日）功能。
 
@@ -501,5 +501,504 @@ a = np.busday_count(begindates, enddates)
 b = np.busday_count(enddates, begindates)
 print(a)  # 6
 print(b)  # -6
+```
+
+# 四、数组的创建
+
+numpy 提供的最重要的数据结构是 `ndarray`，它是 python 中 `list` 的扩展。
+
+## 1. 依据现有数据来创建 ndarray
+
+1. 通过 `array()` 函数进行创建
+
+   ```python
+   def array(p_object, dtype=None, copy=True, order='K', subok=False, ndmin=0):
+   ```
+
+【例】
+
+```python
+import numpy as np
+
+# 创建一维数组
+a = np.array([0, 1, 2, 3, 4])
+b = np.array([0, 1, 2, 3, 4])
+print(a, type(a))
+# [0 1 2 3 4] <class 'numpy.ndarray'>
+print(b, type(b))
+# [0 1 2 3 4] <class 'numpy.ndarray'>
+
+# 创建二维数组
+c = np.array([[11, 12, 13, 14, 15],
+              [16, 17, 18, 19, 20],
+              [21, 22, 23, 24, 25],
+              [26, 27, 28, 29, 30],
+              [31, 32, 33, 34, 35]])
+print(c, type(c))
+# [[11 12 13 14 15]
+#  [16 17 18 19 20]
+#  [21 22 23 24 25]
+#  [26 27 28 29 30]
+#  [31 32 33 34 35]] <class 'numpy.ndarray'>
+
+# 创建三维数组
+d = np.array([[(1.5, 2, 3), (4, 5, 6)],
+              [(3, 2, 1), (4, 5, 6)]])
+print(d, type(d))
+# [[[1.5 2.  3. ]
+#   [4.  5.  6. ]]
+#
+#  [[3.  2.  1. ]
+#   [4.  5.  6. ]]] <class 'numpy.ndarray'>
+```
+
+2. 通过 `asarray()` 函数进行创建
+
+`array()` 和 `asarray()` 都可以将结构数据转化为 ndarray，但是 `array()` 和 `asarray()` 主要区别就是 `array()` 仍然会 copy 出一个副本，占用新的内存，但不改变 dtype 时 `asarray()` 不会。
+
+```python
+def asarray(a, dtype=None, order=None):
+    return array(a, dtype, copy=False, order=order)
+```
+
+【例】`array()` 和 `asarray()` 都可以将结构数据转化为 ndarray
+
+```python
+import numpy as np
+
+x = [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
+y = np.array(x)
+z = np.asarray(x)
+x[1][2] = 2
+print(x, type(x))
+# [[1, 1, 1], [1, 1, 2], [1, 1, 1]] <class 'list'>
+
+print(y, type(y))
+# [[1 1 1]
+#  [1 1 1]
+#  [1 1 1]] <class 'numpy.ndarray'>
+
+print(z, type(z))
+# [[1 1 1]
+#  [1 1 1]
+#  [1 1 1]] <class 'numpy.ndarray'>
+```
+
+【例】`array()` 和 `asarray()` 的区别：当数据源是 `ndarray` 时，`array()` 仍然会 copy 出一个副本，占用新的内存，但不改变 dtype 时 `asarray()` 不会。
+
+```python
+import numpy as np
+
+x = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]])
+y = np.array(x)
+z = np.asarray(x)
+w = np.asarray(x, dtype=np.int)
+x[1][2] = 2
+print(x, type(x), x.dtype)
+# [[1 1 1]
+#  [1 1 2]
+#  [1 1 1]] <class 'numpy.ndarray'> int32
+
+print(y, type(y), y.dtype)
+# [[1 1 1]
+#  [1 1 1]
+#  [1 1 1]] <class 'numpy.ndarray'> int32
+
+print(z, type(z), z.dtype)
+# [[1 1 1]
+#  [1 1 2]
+#  [1 1 1]] <class 'numpy.ndarray'> int32
+
+print(w, type(w), w.dtype)
+# [[1 1 1]
+#  [1 1 2]
+#  [1 1 1]] <class 'numpy.ndarray'> int32
+```
+
+【例】更改为较大的 dtype 时，其大小必须是 array 的最后一个 axis 的总大小（以字节为单位）的除数
+
+```python
+import numpy as np
+
+x = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]])
+print(x, x.dtype)
+# [[1 1 1]
+#  [1 1 1]
+#  [1 1 1]] int32
+x.dtype = np.float
+# ValueError: When changing to a larger dtype, its size must be a divisor of the total size in bytes of the last axis of the array.
+```
+
+3. 通过 `fromfunction()` 函数进行创建
+
+给函数绘图的时候可能会用到 `fromfunction()` ，该函数可从函数中创建数组。
+
+```python
+def fromfunction(function, shape, **kwargs):
+```
+
+【例】通过在每个坐标上执行一个函数来构造数组。
+
+```python
+import numpy as np
+
+
+def f(x, y):
+    return 10 * x + y
+
+
+x = np.fromfunction(f, (5, 4), dtype=int)
+print(x)
+# [[ 0  1  2  3]
+#  [10 11 12 13]
+#  [20 21 22 23]
+#  [30 31 32 33]
+#  [40 41 42 43]]
+
+x = np.fromfunction(lambda i, j: i == j, (3, 3), dtype=int)
+print(x)
+# [[ True False False]
+#  [False  True False]
+#  [False False  True]]
+
+x = np.fromfunction(lambda i, j: i + j, (3, 3), dtype=int)
+print(x)
+# [[0 1 2]
+#  [1 2 3]
+#  [2 3 4]]
+```
+
+## 2. 依据 ones 和 zeros 填充方式
+
+在机器学习任务中经常做的一件事就是初始化常数，需要用常数值或随机值来创建一个固定大小的矩阵。
+
+### (a) 零数组
+
+- `zeros()` 函数：返回给定形状和类型的零数组；
+- `zeros_like()` 函数：返回与给定数组形状和类型相同的零数组。
+
+```python
+def zeros(shape, dtype=None, order='C'):
+    ...
+
+def zeros_like(a, dtype=None, order='K', subok=True, shape=None):
+    ...
+```
+
+【例】
+
+```python
+import numpy as np
+
+x = np.zeros(5)
+print(x) # [0. 0. 0. 0. 0.]
+x = np.zeros([2, 3])
+print(x)
+# [[0. 0. 0.]
+#  [0. 0. 0.]]
+
+x = np.array([[1, 2, 3], [4, 5, 6]])
+y = np.zeros_like(x)
+print(y)
+# [[0 0 0]
+#  [0 0 0]]
+```
+
+### (b) 1 数组
+
+- `ones()` 函数：返回给定形状和类型的 1 数组；
+- `ones_like()` 函数：返回与给定数组形状和类型相同的 1 数组。
+
+```python
+def ones(shape, dtype=None, order='C'):
+    ...
+    
+def ones_like(a, dtype=None, order='K', subok=True, shape=None):
+    ...
+```
+
+### (c) 空数组
+
+- `empty()` 函数：返回一个空数组，数组元素为随机数；
+- `empty_like` 函数：返回与给定数组具有相同形状和类型的新数组。
+
+```python
+def empty(shape, dtype=None, order='C'):
+    ...
+    
+def empty_like(prototype, dtype=None, order='K', subok=None, shape=None):
+    ...
+```
+
+### (d) 单位数组
+
+- `eye()` 函数：返回一个对角线上为 1，其它地方为零的单位数组；
+- `identity()` 函数：返回一个方的单位数组。
+
+```python
+def eye(N, M=None, k=0, dtype=float, order='C'):
+    ...
+    
+def identity(n, dtype=None):
+    ...
+```
+
+【例】
+
+```python
+import numpy as np
+
+x = np.eye(4)
+print(x)
+# [[1. 0. 0. 0.]
+#  [0. 1. 0. 0.]
+#  [0. 0. 1. 0.]
+#  [0. 0. 0. 1.]]
+
+x = np.eye(2, 3)
+print(x)
+# [[1. 0. 0.]
+#  [0. 1. 0.]]
+
+x = np.identity(4)
+print(x)
+# [[1. 0. 0. 0.]
+#  [0. 1. 0. 0.]
+#  [0. 0. 1. 0.]
+#  [0. 0. 0. 1.]]
+```
+
+### (e) 对角数组
+
+- `diag()` 函数：提取对角线或构造对角数组。
+
+```python
+def diag(v, k=0):
+    ...
+```
+
+【例】
+
+```python
+import numpy as np
+
+x = np.arange(9).reshape((3, 3))
+print(x)
+
+print(np.diag(x))
+# [[0 1 2]
+#  [3 4 5]
+#  [6 7 8]]
+print(np.diag(x, k=1))  # [1 5]
+print(np.diag(x, k=-1))  # [3 7]
+
+v = [1, 3, 5, 7]
+x = np.diag(v)
+print(x)
+# [[1 0 0 0]
+#  [0 3 0 0]
+#  [0 0 5 0]
+#  [0 0 0 7]]
+```
+
+### (f) 常数数组
+
+- `full()` 函数：返回一个常数数组；
+- `full_like` 函数：返回与给定数组具有相同形状和类型的常数数组。
+
+```python
+def full(shape, fill_value, dtype=None, order='C'):
+    ...
+    
+def full_like(a, fill_value, order='K', sudok=True, shape=None)
+```
+
+【例】
+
+```python
+import numpy as np
+
+x = np.full((2,), 7)
+print(x)
+# [7 7]
+
+x = np.full(2, 7)
+print(x)
+# [7 7]
+
+x = np.full((2, 7), 7)
+print(x)
+# [[7 7 7 7 7 7 7]
+#  [7 7 7 7 7 7 7]]
+
+x = np.array([[1, 2, 3], [4, 5, 6]])
+y = np.full_like(x, 7)
+print(y)
+# [[7 7 7]
+#  [7 7 7]]
+```
+
+## 3. 利用数值范围来创建 ndarray
+
+- `arange()` 函数：返回给定间隔内的均匀间隔的值；
+- `linspace()` 函数：返回指定间隔内的等间隔数字；
+- `logspace()` 函数：返回数以对数刻度均匀分布；
+- `numpy.random.rand()`：返回一个由 $[0, 1)$ 内的随机数组成的数组。
+
+```python
+def arange([start,] stop[, step,], dtype=None):
+    ...
+
+def linspace(start, stop, num=50, endpoint=True, retstep=False, dtype=None, axis=0):
+    ...
+
+def logspace(start, stop, num=50, endpoint=True, base=10.0, dtype=None, axis=0):
+    ...
+
+def rand(d0, d1, ..., dn):
+    ...
+```
+
+【例】
+
+```python
+import numpy as np
+
+x = np.arange(5)
+print(x)  # [0 1 2 3 4]
+
+x = np.arange(3, 7, 2)
+print(x)  # [3 5]
+
+x = np.linspace(start=0, stop=2, num=9)
+print(x)  # [0.   0.25 0.5  0.75 1.   1.25 1.5  1.75 2.  ]
+
+x = np.logspace(0, 1, 5)
+print(np.around(x, 2))
+# [ 1.    1.78  3.16  5.62 10.  ]
+
+"""
+np.around 返回四舍五入之后的值，可指定精度
+around(a, decimals=0, out=None)
+a 输入数组
+decimals 要舍入的小数位数，默认值为 0。如果为负，整数将四舍五入到小数点左侧的位置
+"""
+
+x = np.linspace(start=0, stop=1, num=5)
+x = [10 ** i for i in x]
+print(np.round(x, 2))
+# [ 1.    1.78  3.16  5.62 10.  ]
+
+x = np.random.random([2, 3])
+print(x)
+# [[0.37457211 0.56728249 0.46809528]
+#  [0.68499324 0.47909432 0.01194955]]
+```
+
+## 4. 结构数组的创建
+
+结构数组，首先需要定义结构，然后利用 `np.array()` 来创建数组，其参数 `dtype` 为定义的结构。
+
+### (a) 利用字典来定义结构
+
+【例】
+
+```python
+import numpy as np
+
+personType = np.dtype({
+    'names': ['name', 'age', 'weight'],
+    'formats': ['U30', 'i8', 'f8']})
+
+a = np.array([('Liming', 24, 63.9), ('Mike', 15, 67.), ('Jan', 34, 45.8)],
+             dtype=personType)
+print(a, type(a))
+# [('Liming', 24, 63.9) ('Mike', 15, 67. ) ('Jan', 34, 45.8)]
+# <class 'numpy.ndarray'>
+```
+
+### (b) 利用包含多个元组的列表来定义结构
+
+【例】
+
+```python
+import numpy as np
+
+personType = np.dtype([('name', 'U30'), ('age', 'i8'), ('weight', 'f8')])
+a = np.array([('Liming', 24, 63.9), ('Mike', 15, 67.), ('Jan', 34, 45.8)],
+             dtype=personType)
+print(a, type(a))
+# [('Liming', 24, 63.9) ('Mike', 15, 67. ) ('Jan', 34, 45.8)]
+# <class 'numpy.ndarray'>
+
+# 结构数组的取值方式和一般数组差不多，可以通过下标取得元素：
+print(a[0])
+# ('Liming', 24, 63.9)
+
+print(a[-2:])
+# [('Mike', 15, 67. ) ('Jan', 34, 45.8)]
+
+# 我们可以使用字段名作为下标获取对应的值
+print(a['name'])
+# ['Liming' 'Mike' 'Jan']
+print(a['age'])
+# [24 15 34]
+print(a['weight'])
+# [63.9 67.  45.8]
+```
+
+------
+
+**数组的属性**
+
+在使用 numpy 时，你会想知道数组的某些信息。numpy 中有许多便捷的方法，可以给我们想要的信息。
+
+- `numpy.ndarray.ndim`：返回数组的维数（轴的个数），也称为秩。一维数组的秩为 1，二维数组的秩为 2，以此类推。
+- `numpy.ndarray.shape`：表示数组的维度，返回一个元组，这个元组的长度就是维度的数目，即 ndim 属性（秩）。
+- `numpy.ndarray.dtype`：ndarray 对象的元素类型。
+- `numpy.ndarray.itemsize`：以字节的形式返回数组中每一个元素的大小。
+
+```python
+class ndarray(object):
+    shape = property(lambda self: object(), lambda self, v: None, lambda self: None)
+    dtype = property(lambda self: object(), lambda self, v: None, lambda self: None)
+    size = property(lambda self: object(), lambda self, v: None, lambda self: None)
+    ndim = property(lambda self: object(), lambda self, v: None, lambda self: None)
+    itemsize = property(lambda self: object(), lambda self, v: None, lambda self: None)
+```
+
+【例】
+
+```python
+import numpy as np
+
+a = np.array([1, 2, 3, 4, 5])
+print(a.shape)  # (5,)
+print(a.dtype)  # int32
+print(a.size)  # 5
+print(a.ndim)  # 1
+print(a.itemsize)  # 4
+
+b = np.array([[1, 2, 3], [4, 5, 6.0]])
+print(b.shape)  # (2, 3)
+print(b.dtype)  # float64
+print(b.size)  # 6
+print(b.ndim)  # 2
+print(b.itemsize)  # 8
+```
+
+在 `ndarray` 中所有元素必须是同一类型，否则会自动向下转换，`int -> float -> str`。
+
+【例】
+
+```python
+import numpy as np
+
+a = np.array([1, 2, 3, 4, 5])
+print(a)  # [1 2 3 4 5]
+b = np.array([1, 2, 3, 4, '5'])
+print(b)  # ['1' '2' '3' '4' '5']
+c = np.array([1, 2, 3, 4, 5.0])
+print(c)  # [1. 2. 3. 4. 5.]
 ```
 
