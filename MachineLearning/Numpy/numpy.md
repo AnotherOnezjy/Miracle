@@ -4145,3 +4145,1795 @@ np.abs(Z - z).argmin()
 print(Z.flat[np.abs(Z - z).argmin()])
 ```
 
+# 第五章 排序搜索计数及集合操作
+
+## 一、排序，搜索和计数
+
+### 排序
+
+#### numpy.sort()
+
+- `numpy.sort(a[, axis=-1, kind='quicksort', order=None])`：Return a sorted **copy** of an array.
+  - `axis`：排序沿数组的（轴）方向， 0 表示按列，1 表示按行，None 表示展开来排序，默认为 -1，表示沿最后的轴排序。
+  - `kind`：排序的算法，提供了快排 `quicksort`、混排 `mergesort`、堆排 `heapsort`，默认为 `quicksort`。
+  - `order`：排序的字段名，可指定字段排序，默认为 None。
+
+【例】
+
+```python
+import numpy as np
+
+np.random.seed(20200612)
+x = np.random.rand(5, 5) * 10
+x = np.around(x, 2)
+print(x)
+# [[2.32 7.54 9.78 1.73 6.22]
+#  [6.93 5.17 9.28 9.76 8.25]
+#  [0.01 4.23 0.19 1.73 9.27]
+#  [7.99 4.97 0.88 7.32 4.29]
+#  [9.05 0.07 8.95 7.9  6.99]]
+
+y = np.sort(x)
+print(y)
+# [[1.73 2.32 6.22 7.54 9.78]
+#  [5.17 6.93 8.25 9.28 9.76]
+#  [0.01 0.19 1.73 4.23 9.27]
+#  [0.88 4.29 4.97 7.32 7.99]
+#  [0.07 6.99 7.9  8.95 9.05]]
+
+y = np.sort(x, axis=0)
+print(y)
+# [[0.01 0.07 0.19 1.73 4.29]
+#  [2.32 4.23 0.88 1.73 6.22]
+#  [6.93 4.97 8.95 7.32 6.99]
+#  [7.99 5.17 9.28 7.9  8.25]
+#  [9.05 7.54 9.78 9.76 9.27]]
+
+y = np.sort(x, axis=1)
+print(y)
+# [[1.73 2.32 6.22 7.54 9.78]
+#  [5.17 6.93 8.25 9.28 9.76]
+#  [0.01 0.19 1.73 4.23 9.27]
+#  [0.88 4.29 4.97 7.32 7.99]
+#  [0.07 6.99 7.9  8.95 9.05]]
+```
+
+【例】
+
+```python
+import numpy as np
+
+dt = np.dtype([('name', 'S10'), ('age', np.int)])
+a = np.array([("Mike", 21), ("Nancy", 25), ("Bob", 17), ("Jane", 27)], dtype=dt)
+b = np.sort(a, order='name')
+print(b)
+# [(b'Bob', 17) (b'Jane', 27) (b'Mike', 21) (b'Nancy', 25)]
+
+b = np.sort(a, order='age')
+print(b)
+# [(b'Bob', 17) (b'Mike', 21) (b'Nancy', 25) (b'Jane', 27)]
+```
+
+如果排序后，想用元素的索引位置替代排序后的实际结果，该怎么办呢？
+
+#### numpy.argsort()
+
+- `numpy.argsort(a[, axis=-1, kind='quicksort', order=None])`：Returns the indices that would sort an array.
+
+【例】对数组沿给定轴执行间接排序，并使用指定排序类型返回数据的索引数组。这个索引数组用于构造排序后的数组。
+
+```python
+import numpy as np
+
+np.random.seed(20200612)
+x = np.random.randint(0, 10, 10)
+print(x)
+# [6 1 8 5 5 4 1 2 9 1]
+
+y = np.argsort(x)
+print(y)
+# [1 6 9 7 5 3 4 0 2 8]
+
+print(x[y])
+# [1 1 1 2 4 5 5 6 8 9]
+
+y = np.argsort(-x)
+print(y)
+# [8 2 0 3 4 5 7 1 6 9]
+
+print(x[y])
+# [9 8 6 5 5 4 2 1 1 1]
+```
+
+【例】
+
+```python
+import numpy as np
+
+np.random.seed(20200612)
+x = np.random.rand(5, 5) * 10
+x = np.around(x, 2)
+print(x)
+# [[2.32 7.54 9.78 1.73 6.22]
+#  [6.93 5.17 9.28 9.76 8.25]
+#  [0.01 4.23 0.19 1.73 9.27]
+#  [7.99 4.97 0.88 7.32 4.29]
+#  [9.05 0.07 8.95 7.9  6.99]]
+
+y = np.argsort(x)
+print(y)
+# [[3 0 4 1 2]
+#  [1 0 4 2 3]
+#  [0 2 3 1 4]
+#  [2 4 1 3 0]
+#  [1 4 3 2 0]]
+
+y = np.argsort(x, axis=0)
+print(y)
+# [[2 4 2 0 3]
+#  [0 2 3 2 0]
+#  [1 3 4 3 4]
+#  [3 1 1 4 1]
+#  [4 0 0 1 2]]
+
+y = np.argsort(x, axis=1)
+print(y)
+# [[3 0 4 1 2]
+#  [1 0 4 2 3]
+#  [0 2 3 1 4]
+#  [2 4 1 3 0]
+#  [1 4 3 2 0]]
+
+y = np.array([np.take(x[i], np.argsort(x[i])) for i in range(5)])
+# numpy.take(a, indices, axis=None, out=None, mode='raise')沿轴从数组中获取元素。
+print(y)
+# [[1.73 2.32 6.22 7.54 9.78]
+#  [5.17 6.93 8.25 9.28 9.76]
+#  [0.01 0.19 1.73 4.23 9.27]
+#  [0.88 4.29 4.97 7.32 7.99]
+#  [0.07 6.99 7.9  8.95 9.05]]
+```
+
+如何将数据按照某一指标进行排序呢？
+
+#### numpy.lexsort()
+
+- `numpy.lexsort(keys[, axis=-1])`：Perform an indirect stable sort using a sequence of keys.（使用键序列执行间接稳定排序）
+- 给定多个可以在电子表格中解释为列的排序键，`lexsort` 返回一个整数索引数组，该数组描述了按多个列排序的顺序。序列中的最后一个键用于主排序顺序，倒数第二个键用于辅助排序顺序，依此类推。`keys` 参数必须是可以转换为相同形状的数组的对象序列。如果为 `keys` 参数提供了 2D 数组，则将其行解释为排序键，并根据最后一行，倒数第二行等进行排序。
+
+【例】按照第一列的升序或者降序对整体数据进行排序。
+
+```python
+import numpy as np
+
+np.random.seed(20200612)
+x = np.random.rand(5, 5) * 10
+x = np.around(x, 2)
+print(x)
+# [[2.32 7.54 9.78 1.73 6.22]
+#  [6.93 5.17 9.28 9.76 8.25]
+#  [0.01 4.23 0.19 1.73 9.27]
+#  [7.99 4.97 0.88 7.32 4.29]
+#  [9.05 0.07 8.95 7.9  6.99]]
+
+index = np.lexsort([x[:, 0]])
+print(index)
+# [2 0 1 3 4]
+
+y = x[index]
+print(y)
+# [[0.01 4.23 0.19 1.73 9.27]
+#  [2.32 7.54 9.78 1.73 6.22]
+#  [6.93 5.17 9.28 9.76 8.25]
+#  [7.99 4.97 0.88 7.32 4.29]
+#  [9.05 0.07 8.95 7.9  6.99]]
+
+index = np.lexsort([-1 * x[:, 0]])
+print(index)
+# [4 3 1 0 2]
+
+y = x[index]
+print(y)
+# [[9.05 0.07 8.95 7.9  6.99]
+#  [7.99 4.97 0.88 7.32 4.29]
+#  [6.93 5.17 9.28 9.76 8.25]
+#  [2.32 7.54 9.78 1.73 6.22]
+#  [0.01 4.23 0.19 1.73 9.27]]
+```
+
+【例】
+
+```python
+import numpy as np
+
+x = np.array([1, 5, 1, 4, 3, 4, 4])
+y = np.array([9, 4, 0, 4, 0, 2, 1])
+a = np.lexsort([x])
+b = np.lexsort([y])
+print(a)
+# [0 2 4 3 5 6 1]
+print(x[a])
+# [1 1 3 4 4 4 5]
+
+print(b)
+# [2 4 6 5 1 3 0]
+print(y[b])
+# [0 0 1 2 4 4 9]
+
+z = np.lexsort([y, x])
+print(z)
+# [2 0 4 6 5 3 1]
+print(x[z])
+# [1 1 3 4 4 4 5]
+
+z = np.lexsort([x, y])
+print(z)
+# [2 4 6 5 3 1 0]
+print(y[z])
+# [0 0 1 2 4 4 9]
+```
+
+#### numpy.partition()
+
+- `numpy.partition(a, kth, axis=-1, kind='introselect', order=None)`：Return a partitioned copy of an array.
+
+Creates a copy of the array with its elements rearranged in such a way that the value of the element in k-th position is in the position it would be in a sorted array. All elements smaller than the k-th element are moved before this element and all equal or greater are moved behind it. The ordering of the elements in the two partitions is undefined.
+
+【例】以索引是 kth 的元素为基准，将元素分成两部分，即大于该元素的放在其后面，小于该元素的放在其前面，这里有点类似于快排。
+
+```python
+import numpy as np
+
+np.random.seed(100)
+x = np.random.randint(1, 30, [8, 3])
+print(x)
+# [[ 9 25  4]
+#  [ 8 24 16]
+#  [17 11 21]
+#  [ 3 22  3]
+#  [ 3 15  3]
+#  [18 17 25]
+#  [16  5 12]
+#  [29 27 17]]
+
+y = np.sort(x, axis=0)
+print(y)
+# [[ 3  5  3]
+#  [ 3 11  3]
+#  [ 8 15  4]
+#  [ 9 17 12]
+#  [16 22 16]
+#  [17 24 17]
+#  [18 25 21]
+#  [29 27 25]]
+
+z = np.partition(x, kth=2, axis=0)
+print(z)
+# [[ 3  5  3]
+#  [ 3 11  3]
+#  [ 8 15  4]
+#  [ 9 22 21]
+#  [17 24 16]
+#  [18 17 25]
+#  [16 25 12]
+#  [29 27 17]]
+```
+
+【例】选取每一列第三小的数据。
+
+```python
+import numpy as np
+
+np.random.seed(100)
+x = np.random.randint(1, 30, [8, 3])
+print(x)
+# [[ 9 25  4]
+#  [ 8 24 16]
+#  [17 11 21]
+#  [ 3 22  3]
+#  [ 3 15  3]
+#  [18 17 25]
+#  [16  5 12]
+#  [29 27 17]]
+z = np.partition(x, kth=2, axis=0)
+print(z[2])
+# [ 8 15  4]
+```
+
+【例】选取每一列第三大的数据。
+
+```python
+import numpy as np
+
+np.random.seed(100)
+x = np.random.randint(1, 30, [8, 3])
+print(x)
+# [[ 9 25  4]
+#  [ 8 24 16]
+#  [17 11 21]
+#  [ 3 22  3]
+#  [ 3 15  3]
+#  [18 17 25]
+#  [16  5 12]
+#  [29 27 17]]
+z = np.partition(x, kth=-3, axis=0)
+print(z[-3])
+# [17 24 17]
+```
+
+#### numpy.argpartition()
+
+- `numpy.argpartition(a, kth, axis=-1, kind='introselect', order=None)`
+
+【例】
+
+```python
+import numpy as np
+
+np.random.seed(100)
+x = np.random.randint(1, 30, [8, 3])
+print(x)
+# [[ 9 25  4]
+#  [ 8 24 16]
+#  [17 11 21]
+#  [ 3 22  3]
+#  [ 3 15  3]
+#  [18 17 25]
+#  [16  5 12]
+#  [29 27 17]]
+
+y = np.argsort(x, axis=0)
+print(y)
+# [[3 6 3]
+#  [4 2 4]
+#  [1 4 0]
+#  [0 5 6]
+#  [6 3 1]
+#  [2 1 7]
+#  [5 0 2]
+#  [7 7 5]]
+
+z = np.argpartition(x, kth=2, axis=0)
+print(z)
+# [[3 6 3]
+#  [4 2 4]
+#  [1 4 0]
+#  [0 3 2]
+#  [2 1 1]
+#  [5 5 5]
+#  [6 0 6]
+#  [7 7 7]]
+```
+
+【例】选取每一列第三小的数的索引。
+
+```python
+import numpy as np
+
+np.random.seed(100)
+x = np.random.randint(1, 30, [8, 3])
+print(x)
+# [[ 9 25  4]
+#  [ 8 24 16]
+#  [17 11 21]
+#  [ 3 22  3]
+#  [ 3 15  3]
+#  [18 17 25]
+#  [16  5 12]
+#  [29 27 17]]
+
+z = np.argpartition(x, kth=2, axis=0)
+print(z[2])
+# [1 4 0]
+```
+
+【例】选取每一列第三大的数的索引。
+
+```python
+import numpy as np
+
+np.random.seed(100)
+x = np.random.randint(1, 30, [8, 3])
+print(x)
+# [[ 9 25  4]
+#  [ 8 24 16]
+#  [17 11 21]
+#  [ 3 22  3]
+#  [ 3 15  3]
+#  [18 17 25]
+#  [16  5 12]
+#  [29 27 17]]
+
+z = np.argpartition(x, kth=-3, axis=0)
+print(z[-3])
+# [2 1 7]
+```
+
+------
+
+### 搜索
+
+#### numpy.argmax()
+
+- `numpy.argmax(a[, axis=None, out=None])`：Returns the indices of the maximum values along an axis.
+
+【例】
+
+```python
+import numpy as np
+
+np.random.seed(20200612)
+x = np.random.rand(5, 5) * 10
+x = np.around(x, 2)
+print(x)
+# [[2.32 7.54 9.78 1.73 6.22]
+#  [6.93 5.17 9.28 9.76 8.25]
+#  [0.01 4.23 0.19 1.73 9.27]
+#  [7.99 4.97 0.88 7.32 4.29]
+#  [9.05 0.07 8.95 7.9  6.99]]
+
+y = np.argmax(x)
+print(y)  # 2
+
+y = np.argmax(x, axis=0)
+print(y)
+# [4 0 0 1 2]
+
+y = np.argmax(x, axis=1)
+print(y)
+# [2 3 4 0 0]
+```
+
+#### numpy.argmin()
+
+#### numpy.nonzero()
+
+- `numpy.nonzero(a)`：Return the indices of the elements that are non-zero.
+
+其值为非零元素的下标在对应轴上的值。
+
+1. 只有 a 中非零元素才会有索引值，那些零值元素没有索引值；
+2. 返回一个长度为 a.ndim 的元组（tuple），元组的每个元素都是一个整数数组（array）；
+3. 每一个 array 都是从一个维度上来描述其索引值。比如，如果 a 是一个二维数组，则 tuple 包含两个 array，第一个 array 从行维度来描述索引值，第二个 array 从列角度来描述索引值；
+4. `np.transpose(np.nonzero(x))` 函数能够描述出每一个非零元素在不同维度的索引值；
+5. 通过 `a[nonzero(a)]` 得到所有 a 中的非零值。
+
+【例】一维数组
+
+```python
+import numpy as np
+
+x = np.array([0, 2, 3])
+print(x)  # [0 2 3]
+print(x.shape)  # (3,)
+print(x.ndim)  # 1
+
+y = np.nonzero(x)
+print(y)  # (array([1, 2], dtype=int64),)
+print(np.array(y))  # [[1 2]]
+print(np.array(y).shape)  # (1, 2)
+print(np.array(y).ndim)  # 2
+print(np.transpose(y))
+# [[1]
+#  [2]]
+print(x[np.nonzero(x)])
+#[2, 3]
+```
+
+【例】二维数组
+
+```python
+import numpy as np
+
+x = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]])
+print(x)
+# [[3 0 0]
+#  [0 4 0]
+#  [5 6 0]]
+print(x.shape)  # (3, 3)
+print(x.ndim)  # 2
+
+y = np.nonzero(x)
+print(y)
+# (array([0, 1, 2, 2], dtype=int64), array([0, 1, 0, 1], dtype=int64))
+print(np.array(y))
+# [[0 1 2 2]
+#  [0 1 0 1]]
+print(np.array(y).shape)  # (2, 4)
+print(np.array(y).ndim)  # 2
+
+y = x[np.nonzero(x)]
+print(y)  # [3 4 5 6]
+
+y = np.transpose(np.nonzero(x))
+print(y)
+# [[0 0]
+#  [1 1]
+#  [2 0]
+#  [2 1]]
+```
+
+【例】三维数组
+
+```python
+import numpy as np
+
+x = np.array([[[0, 1], [1, 0]], [[0, 1], [1, 0]], [[0, 0], [1, 0]]])
+print(x)
+# [[[0 1]
+#   [1 0]]
+#
+#  [[0 1]
+#   [1 0]]
+#
+#  [[0 0]
+#   [1 0]]]
+print(np.shape(x))  # (3, 2, 2)
+print(x.ndim)  # 3
+
+y = np.nonzero(x)
+print(np.array(y))
+# [[0 0 1 1 2]
+#  [0 1 0 1 1]
+#  [1 0 1 0 0]]
+print(np.array(y).shape)  # (3, 5)
+print(np.array(y).ndim)  # 2
+print(y)
+# (array([0, 0, 1, 1, 2], dtype=int64), array([0, 1, 0, 1, 1], dtype=int64), array([1, 0, 1, 0, 0], dtype=int64))
+print(x[np.nonzero(x)])
+#[1 1 1 1 1]
+```
+
+【例】`nonzero()` 将布尔数组转换成整数数组进行操作。
+
+```python
+import numpy as np
+
+x = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+print(x)
+# [[1 2 3]
+#  [4 5 6]
+#  [7 8 9]]
+
+y = x > 3
+print(y)
+# [[False False False]
+#  [ True  True  True]
+#  [ True  True  True]]
+
+y = np.nonzero(x > 3)
+print(y)
+# (array([1, 1, 1, 2, 2, 2], dtype=int64), array([0, 1, 2, 0, 1, 2], dtype=int64))
+
+y = x[np.nonzero(x > 3)]
+print(y)
+# [4 5 6 7 8 9]
+
+y = x[x > 3]
+print(y)
+# [4 5 6 7 8 9]
+```
+
+#### numpy.where()
+
+- `numpy.where(condition, [x=None, y=None])`：Return elements chosen from x or y depending on condition.（有点像 `C` 中的三目运算符 `?:`）
+
+【例】满足条件 `condition`，输出 `x`，不满足输出 `y`。
+
+```python
+import numpy as np
+
+x = np.arange(10)
+print(x)
+# [0 1 2 3 4 5 6 7 8 9]
+
+y = np.where(x < 5, x, 10 * x)
+print(y)
+# [ 0  1  2  3  4 50 60 70 80 90]
+
+x = np.array([[0, 1, 2],
+              [0, 2, 4],
+              [0, 3, 6]])
+y = np.where(x < 4, x, -1)
+print(y)
+# [[ 0  1  2]
+#  [ 0  2 -1]
+#  [ 0  3 -1]]
+```
+
+【例】只有 `condition`，没有 `x` 和 `y`，则输出满足条件（即非 0）元素的坐标（等价于 `numpy.nonzero`）。这里的坐标以 tuple 的形式给出，通常原数组有多少维，输出的 tuple 中就包含几个数组，分别对应符合条件元素的各维坐标。
+
+```python
+import numpy as np
+
+x = np.array([1, 2, 3, 4, 5, 6, 7, 8])
+y = np.where(x > 5)
+print(y)
+# (array([5, 6, 7], dtype=int64),)
+print(x[y])
+# [6 7 8]
+
+y = np.nonzero(x > 5)
+print(y)
+# (array([5, 6, 7], dtype=int64),)
+print(x[y])
+# [6 7 8]
+
+x = np.array([[11, 12, 13, 14, 15],
+              [16, 17, 18, 19, 20],
+              [21, 22, 23, 24, 25],
+              [26, 27, 28, 29, 30],
+              [31, 32, 33, 34, 35]])
+y = np.where(x > 25)
+print(y)
+# (array([3, 3, 3, 3, 3, 4, 4, 4, 4, 4], dtype=int64), array([0, 1, 2, 3, 4, 0, 1, 2, 3, 4], dtype=int64))
+
+print(x[y])
+# [26 27 28 29 30 31 32 33 34 35]
+
+y = np.nonzero(x > 25)
+print(y)
+# (array([3, 3, 3, 3, 3, 4, 4, 4, 4, 4], dtype=int64), array([0, 1, 2, 3, 4, 0, 1, 2, 3, 4], dtype=int64))
+print(x[y])
+# [26 27 28 29 30 31 32 33 34 35]
+```
+
+#### numpy.searchsorted()
+
+- `numpy.searchsorted(a, v[, side='left', sorter=None]`：Find indices where elements should be inserted to maintain order.
+  - `a`：一维输入数组。但 `sorter` 参数为 None 时，`a` 必须为升序数组；否则，`sorter` 不能为空，存放 `a` 中元素的 `index`，用于反映 `a` 数组的升序排列方式。
+  - `v`：插入 `a` 数组的值，可以为单个元素，`list` 或 `ndarray`。
+  - `side`：查询方向，当为 `left` 时，将返回第一个符合条件的元素下标；当为 `right` 时，将返回最后一个符合条件的元素下标。
+  - `sorter`：一维数组存放 `a` 数组元素的 `index`，`index` 对应元素为升序。
+
+【例】
+
+```python
+import numpy as np
+
+x = np.array([0, 1, 5, 9, 11, 18, 26, 33])
+y = np.searchsorted(x, 15)
+print(y)  # 5
+
+y = np.searchsorted(x, 15, side='right')
+print(y)  # 5
+
+y = np.searchsorted(x, -1)
+print(y)  # 0
+
+y = np.searchsorted(x, -1, side='right')
+print(y)  # 0
+
+y = np.searchsorted(x, 35)
+print(y)  # 8
+
+y = np.searchsorted(x, 35, side='right')
+print(y)  # 8
+
+y = np.searchsorted(x, 11)
+print(y)  # 4
+
+y = np.searchsorted(x, 11, side='right')
+print(y)  # 5
+
+y = np.searchsorted(x, 0)
+print(y)  # 0
+
+y = np.searchsorted(x, 0, side='right')
+print(y)  # 1
+
+y = np.searchsorted(x, 33)
+print(y)  # 7
+
+y = np.searchsorted(x, 33, side='right')
+print(y)  # 8
+```
+
+【例】
+
+```python
+import numpy as np
+
+x = np.array([0, 1, 5, 9, 11, 18, 26, 33])
+y = np.searchsorted(x, [-1, 0, 11, 15, 33, 35])
+print(y)  # [0 0 4 5 7 8]
+
+y = np.searchsorted(x, [-1, 0, 11, 15, 33, 35], side='right')
+print(y)  # [0 1 5 5 8 8]
+```
+
+【例】
+
+```python
+import numpy as np
+
+x = np.array([0, 1, 5, 9, 11, 18, 26, 33])
+np.random.shuffle(x)
+print(x)  # [33  1  9 18 11 26  0  5]
+
+x_sort = np.argsort(x)
+print(x_sort)  # [6 1 7 2 4 3 5 0]
+
+y = np.searchsorted(x, [-1, 0, 11, 15, 33, 35], sorter=x_sort)
+print(y)  # [0 0 4 5 7 8]
+
+y = np.searchsorted(x, [-1, 0, 11, 15, 33, 35], side='right', sorter=x_sort)
+print(y)  # [0 1 5 5 8 8]
+```
+
+------
+
+### 计数
+
+#### numpy.count_nonzero()
+
+- `numpy.count_nonzero(a, axis=None)`：Counts the number of non-zero values in the array a.
+
+【例】返回数组中的非 0 元素个数。
+
+```python
+import numpy as np
+
+x = np.count_nonzero(np.eye(4))
+print(x)  # 4
+
+x = np.count_nonzero([[0, 1, 7, 0, 0], [3, 0, 0, 2, 19]])
+print(x)  # 5
+
+x = np.count_nonzero([[0, 1, 7, 0, 0], [3, 0, 0, 2, 19]], axis=0)
+print(x)  # [1 1 1 1 1]
+
+x = np.count_nonzero([[0, 1, 7, 0, 0], [3, 0, 0, 2, 19]], axis=1)
+print(x)  # [2 3]
+```
+
+## 二、集合操作
+
+### 构造集合
+
+- `numpy.unique(ar, return_index=False, return_inverse=False, return_counts=False, axis=None)`：Find the unique elements of an array.
+  - `return_index=True`：表示返回新列表元素在旧列表中的位置。
+  - `return_inverse=True`：表示返回旧列表元素在新列表中的位置。
+  - `return_counts=True`：表示返回新列表元素在旧列表中出现的次数。
+
+【例】找出数组中的唯一值并返回已排序的结果。
+
+```python
+import numpy as np
+
+x = np.unique([1, 1, 3, 2, 3, 3])
+print(x)  # [1 2 3]
+
+x = sorted(set([1, 1, 3, 2, 3, 3]))
+print(x)  # [1, 2, 3]
+
+x = np.array([[1, 1], [2, 3]])
+u = np.unique(x)
+print(u)  # [1 2 3]
+
+x = np.array([[1, 0, 0], [1, 0, 0], [2, 3, 4]])
+y = np.unique(x, axis=0)
+print(y)
+# [[1 0 0]
+#  [2 3 4]]
+
+x = np.array(['a', 'b', 'b', 'c', 'a'])
+u, index = np.unique(x, return_index=True)
+print(u)  # ['a' 'b' 'c']
+print(index)  # [0 1 3]
+print(x[index])  # ['a' 'b' 'c']
+
+x = np.array([1, 2, 6, 4, 2, 3, 2])
+u, index = np.unique(x, return_inverse=True)
+print(u)  # [1 2 3 4 6]
+print(index)  # [0 1 4 3 1 2 1]
+print(u[index])  # [1 2 6 4 2 3 2]
+
+u, count = np.unique(x, return_counts=True)
+print(u)  # [1 2 3 4 6]
+print(count)  # [1 3 1 1 1]
+```
+
+### 布尔运算
+
+- `numpy.in1d(ar1, ar2, assume_unique=False, invert=False)`：Test whether each element of a 1-D array is also present in a second array.
+
+Returns a boolean array the same length as `ar1` that is True where an element of `ar1` is in `ar2` and False otherwise.
+
+【例】前面的数组是否包含于后面的数组，返回布尔值。返回的值是针对第一个参数的数组的，所以维数和第一个参数一致，布尔值与数组的元素位置也一一对应。
+
+```python
+import numpy as np
+
+test = np.array([0, 1, 2, 5, 0])
+states = [0, 2]
+mask = np.in1d(test, states)
+print(mask)  # [ True False  True False  True]
+print(test[mask])  # [0 2 0]
+
+mask = np.in1d(test, states, invert=True)
+print(mask)  # [False  True False  True False]
+print(test[mask])  # [1 5]
+```
+
+#### 求两个集合的交集
+
+- `numpy.intersect1d(ar1, ar2, assume_unique=False, return_indices=False)`：Find the intersection of two arrays.
+
+Return the sorted, unique values that are in both of the input arrays.
+
+【例】求两个数组的唯一化 + 求交集 + 排序函数。
+
+```python
+import numpy as np
+from functools import reduce
+
+x = np.intersect1d([1, 3, 4, 3], [3, 1, 2, 1])
+print(x)  # [1 3]
+
+x = np.array([1, 1, 2, 3, 4])
+y = np.array([2, 1, 4, 6])
+xy, x_ind, y_ind = np.intersect1d(x, y, return_indices=True)
+print(x_ind)  # [0 2 4]
+print(y_ind)  # [1 0 2]
+print(xy)  # [1 2 4]
+print(x[x_ind])  # [1 2 4]
+print(y[y_ind])  # [1 2 4]
+
+x = reduce(np.intersect1d, ([1, 3, 4, 3], [3, 1, 2, 1], [6, 3, 4, 2]))
+print(x)  # [3]
+```
+
+#### 求两个集合的并集
+
+- `numpy.union1d(ar1, ar2)`：Find the union of two array.
+
+Return the unique, sorted array of values that are in either of the two input arrays.
+
+【例】计算两个集合的并集，唯一化并排序
+
+```python
+import numpy as np
+from functools import reduce
+
+x = np.union1d([-1, 0, 1], [-2, 0, 2])
+print(x)  # [-2 -1  0  1  2]
+x = reduce(np.union1d, ([1, 3, 4, 3], [3, 1, 2, 1], [6, 3, 4, 2]))
+print(x)  # [1 2 3 4 6]
+'''
+functools.reduce(function, iterable[, initializer])
+将两个参数的 function 从左至右积累地应用到 iterable 的条目，以便将该可迭代对象缩减为单一的值。 例如，reduce(lambda x, y: x+y, [1, 2, 3, 4, 5]) 是计算 ((((1+2)+3)+4)+5) 的值。 左边的参数 x 是积累值而右边的参数 y 则是来自 iterable 的更新值。 如果存在可选项 initializer，它会被放在参与计算的可迭代对象的条目之前，并在可迭代对象为空时作为默认值。 如果没有给出 initializer 并且 iterable 仅包含一个条目，则将返回第一项。
+
+大致相当于：
+def reduce(function, iterable, initializer=None):
+    it = iter(iterable)
+    if initializer is None:
+        value = next(it)
+    else:
+        value = initializer
+    for element in it:
+        value = function(value, element)
+    return value
+'''
+```
+
+#### 求两个集合的差集
+
+- `numpy.setdiffed(ar1, ar2, assume_unique=False)`：Find the set difference of two arrays.
+
+Return the unique values in `ar1` that are not in `ar2`.
+
+【例】集合的差，即元素存在于第一个函数不存在于第二个函数中。
+
+```python
+import numpy as np
+
+a = np.array([1, 2, 3, 2, 4, 1])
+b = np.array([3, 4, 5, 6])
+x = np.setdiff1d(a, b)
+print(x)  # [1 2]
+```
+
+#### 求两个集合的异或
+
+- `numpy.setxor1d(ar1, ar2, assume_unique=False)`：Find the set exclusive-or of two arrays.
+
+【例】集合的对称差，即两个集合的交集的补集。简而言之，就是两个数组中各自独立拥有的元素的集合。
+
+```python
+import numpy as np
+
+a = np.array([1, 2, 3, 2, 4, 1])
+b = np.array([3, 4, 5, 6])
+x = np.setxor1d(a, b)
+print(x)  # [1 2 5 6]
+```
+
+# 第六章 输入输出
+
+## 一、输入和输出
+
+### 1. numpy 二进制文件
+
+`save()`、`savez() `和 `load()` 函数以 numpy 专用的二进制类型（`.npy`、`.npz`）保存和读取数据，这三个函数会自动处理ndim、dtype、shape 等信息，使用它们读写数组非常方便，但是 `save()` 和 `savez()` 输出的文件很难与其它语言编写的程序兼容。
+
+【函数】
+
+```python
+def save(file, arr, allow_pickle=True, fix_imports=True):
+    ...
+```
+
+- `save()` 函数：以 `.npy` 格式将数组保存到二进制文件中。
+- `.npy` 格式：以二进制的方式存储文件，在二进制文件第一行以文本形式保存了数据的元信息（ndim、dtype、shape等），可以用二进制工具查看内容。
+
+【函数】
+
+```python
+def load(file, mmap_mode=None, allow_pickle=False, fix_imports=True, encoding='ASCII'):
+	...
+```
+
+- `load()` 函数：从 `.npy`、`.npz` 或 `pickled` 文件加载数组或 `pickled` 对象。
+- `mmap_mode:{None, 'r+', 'r', 'w+', 'w', 'c'}`：读取文件的方式。
+- `allow_pickle=False`：允许加载存储在 `.npy` 文件中的 `pickled` 对象数组。
+- `fix_importings=True`：若为 True，pickle 将尝试将旧的 python2 名称映射到 python3 中使用的新名称。
+- `encoding='ASCII'`：制定编码格式，默认为 “ASCII”。
+
+【例】将一个数组保存到一个文件中。
+
+```python
+import numpy as np
+
+outfile = r'.\test.npy'
+np.random.seed(20200619)
+x = np.random.uniform(low=0, high=1,size = [3, 5])
+np.save(outfile, x)
+y = np.load(outfile)
+print(y)
+# [[0.01123594 0.66790705 0.50212171 0.7230908  0.61668256]
+#  [0.00668332 0.1234096  0.96092409 0.67925305 0.38596837]
+#  [0.72342998 0.26258324 0.24318845 0.98795012 0.77370715]]
+```
+
+【函数】
+
+```python
+def savez(file, *args, **kwds):
+    ...
+```
+
+- `savez() `函数：以未压缩的 `.npz` 格式将多个数组保存到单个文件中。
+- `.npz` 格式：以压缩打包的方式存储文件，可以用压缩软件解压。
+- `savez()` 函数：第一个参数是文件名，其后的参数都是需要保存的数组，也可以使用关键字参数为数组起一个名字，非关键字参数传递的数组会自动起名为`arr_0, arr_1, …`。
+- `savez() `函数：输出的是一个压缩文件（扩展名为`.npz`），其中每个文件都是一个`save()`保存的 `.npy` 文件，文件名对应于数组名。`load()` 自动识别 `.npz` 文件，并且返回一个类似于字典的对象，可以通过数组名作为关键字获取数组的内容。
+
+【例】将多个数组保存到一个文件。
+
+```python
+import numpy as np
+
+outfile = r'.\test.npz'
+x = np.linspace(0, np.pi, 5)
+y = np.sin(x)
+z = np.cos(x)
+np.savez(outfile, x, y, z_d=z)
+data = np.load(outfile)
+np.set_printoptions(suppress=True)
+print(data.files)  
+# ['z_d', 'arr_0', 'arr_1']
+
+print(data['arr_0'])
+# [0.         0.78539816 1.57079633 2.35619449 3.14159265]
+
+print(data['arr_1'])
+# [0.         0.70710678 1.         0.70710678 0.        ]
+
+print(data['z_d'])
+# [ 1.          0.70710678  0.         -0.70710678 -1.        ]
+```
+
+用解压软件打开 test.npz 文件，会发现其中有三个文件：`arr_0.npy,arr_1.npy,z_d.npy`，其中分别保存着数组`x,y,z`的内容。
+
+------
+
+### 2. 文本文件
+
+`savetxt()`，`loadtxt()`和`genfromtxt()`函数用来存储和读取文本文件（如`.TXT`，`.CSV`等）。`genfromtxt()`比`loadtxt()`更加强大，可对缺失数据进行处理。
+
+【函数】
+
+```python
+def savetxt(fname, X, fmt='%.18e', delimiter=' ', newline='\n',header='', footer='', comments='# ', encoding=None):
+	...
+```
+
+- `fname`：文件路径
+- `X`：存入文件的数组。
+- `fmt='%.18e'`：写入文件中每个元素的字符串格式，默认'%.18e'（保留18位小数的浮点数形式）。
+- `delimiter=' '`：分割字符串，默认以空格分隔。
+
+【函数】
+
+```python
+def loadtxt(fname, dtype=float, comments='#', delimiter=None,
+            converters=None, skiprows=0, usecols=None, unpack=False,
+            ndmin=0, encoding='bytes', max_rows=None):
+    ...
+```
+
+- `fname`：文件路径。
+- `dtype=float`：数据类型，默认为float。
+- `comments='#'`: 字符串或字符串组成的列表，默认为'#'，表示注释字符集开始的标志。
+- `skiprows=0`：跳过多少行，一般跳过第一行表头。
+- `usecols=None`：元组（元组内数据为列的数值索引）， 用来指定要读取数据的列（第一列为0）。
+- `unpack=False`：当加载多列数据时是否需要将数据列进行解耦赋值给不同的变量。
+
+【例】写入和读出 TXT 文件。
+
+```python
+import numpy as np
+
+outfile = r'.\test.txt'
+x = np.arange(0, 10).reshape(2, -1)
+np.savetxt(outfile, x)
+y = np.loadtxt(outfile)
+print(y)
+# [[0. 1. 2. 3. 4.]
+#  [5. 6. 7. 8. 9.]]
+```
+
+`test.txt` 文件如下：
+
+```python
+0.000000000000000000e+00 1.000000000000000000e+00 2.000000000000000000e+00 3.000000000000000000e+00 4.000000000000000000e+00
+5.000000000000000000e+00 6.000000000000000000e+00 7.000000000000000000e+00 8.000000000000000000e+00 9.000000000000000000e+00
+```
+
+【例】写入和读出 CSV 文件。
+
+```python
+import numpy as np
+
+outfile = r'.\test.csv'
+x = np.arange(0, 10, 0.5).reshape(4, -1)
+np.savetxt(outfile, x, fmt='%.3f', delimiter=',')
+y = np.loadtxt(outfile, delimiter=',')
+print(y)
+# [[0.  0.5 1.  1.5 2. ]
+#  [2.5 3.  3.5 4.  4.5]
+#  [5.  5.5 6.  6.5 7. ]
+#  [7.5 8.  8.5 9.  9.5]]
+```
+
+`test.csv` 文件如下：
+
+```python
+0.000,0.500,1.000,1.500,2.000
+2.500,3.000,3.500,4.000,4.500
+5.000,5.500,6.000,6.500,7.000
+7.500,8.000,8.500,9.000,9.500
+```
+
+【函数】
+
+```python
+def genfromtxt(fname, dtype=float, comments='#', delimiter=None,
+               skip_header=0, skip_footer=0, converters=None,
+               missing_values=None, filling_values=None, usecols=None,
+               names=None, excludelist=None,
+               deletechars=''.join(sorted(NameValidator.defaultdeletechars)),
+               replace_space='_', autostrip=False, case_sensitive=True,
+               defaultfmt="f%i", unpack=None, usemask=False, loose=True,
+               invalid_raise=True, max_rows=None, encoding='bytes'):
+    ...
+```
+
+- `genfromtxt()`函数：从文本文件加载数据，并按指定方式处理缺少的值（是面向结构数组和缺失数据处理的。）。
+- `names=None`：设置为True时，程序将把第一行作为列名称。
+
+`data.csv` 文件（不带缺失值）
+
+```python
+id,value1,value2,value3
+1,123,1.4,23
+2,110,0.5,18
+3,164,2.1,19
+```
+
+【例】
+
+```python
+import numpy as np
+
+outfile = r'.\data.csv'
+x = np.loadtxt(outfile, delimiter=',', skiprows=1)
+print(x)
+# [[  1.  123.    1.4  23. ]
+#  [  2.  110.    0.5  18. ]
+#  [  3.  164.    2.1  19. ]]
+
+x = np.loadtxt(outfile, delimiter=',', skiprows=1, usecols=(1, 2))
+print(x)
+# [[123.    1.4]
+#  [110.    0.5]
+#  [164.    2.1]]
+
+val1, val2 = np.loadtxt(outfile, delimiter=',', skiprows=1, usecols=(1, 2), unpack=True)
+print(val1)  # [123. 110. 164.]
+print(val2)  # [1.4 0.5 2.1]
+```
+
+【例】
+
+```python
+import numpy as np
+
+outfile = r'.\data.csv'
+x = np.genfromtxt(outfile, delimiter=',', names=True)
+print(x)
+# [(1., 123., 1.4, 23.) (2., 110., 0.5, 18.) (3., 164., 2.1, 19.)]
+
+print(type(x))  
+# <class 'numpy.ndarray'>
+
+print(x.dtype)
+# [('id', '<f8'), ('value1', '<f8'), ('value2', '<f8'), ('value3', '<f8')]
+
+print(x['id'])  # [1. 2. 3.]
+print(x['value1'])  # [123. 110. 164.]
+print(x['value2'])  # [1.4 0.5 2.1]
+print(x['value3'])  # [23. 18. 19.]
+```
+
+`data1.csv` 文件（带有缺失值）
+
+```python
+id,value1,value2,value3
+1,123,1.4,23
+2,110,,18
+3,,2.1,19
+```
+
+【例】
+
+```python
+import numpy as np
+
+outfile = r'.\data1.csv'
+x = np.genfromtxt(outfile, delimiter=',', names=True)
+print(x)
+# [(1., 123., 1.4, 23.) (2., 110., nan, 18.) (3.,  nan, 2.1, 19.)]
+
+print(type(x))  
+# <class 'numpy.ndarray'>
+
+print(x.dtype)
+# [('id', '<f8'), ('value1', '<f8'), ('value2', '<f8'), ('value3', '<f8')]
+
+print(x['id'])  # [1. 2. 3.]
+print(x['value1'])  # [123. 110.  nan]
+print(x['value2'])  # [1.4 nan 2.1]
+print(x['value3'])  # [23. 18. 19.]
+```
+
+------
+
+### 3. 文本格式选项
+
+【函数】
+
+```python
+def set_printoptions(precision=None, threshold=None, edgeitems=None,
+                     linewidth=None, suppress=None, nanstr=None, infstr=None,
+                     formatter=None, sign=None, floatmode=None, **kwarg):
+    ...
+```
+
+- `set_printoptions()`函数：设置打印选项。这些选项决定浮点数、数组和其它NumPy对象的显示方式。
+- `precision=8`：设置浮点精度，控制输出的小数点个数，默认是8。
+- `threshold=1000`：概略显示，超过该值则以“…”的形式来表示，默认是1000。
+- `linewidth=75`：用于确定每行多少字符数后插入换行符，默认为75。
+- `suppress=False`：当`suppress=True`，表示小数不需要以科学计数法的形式输出，默认是False。
+- `nanstr=nan`：浮点非数字的字符串表示形式，默认`nan`。
+- `infstr=inf`：浮点无穷大的字符串表示形式，默认`inf`。
+- `formatter`：一个字典，自定义格式化用于显示的数组元素。键为需要格式化的类型，值为格式化的字符串。
+  - `'bool'`
+  - `'int'`
+  - `'float'`
+  - `'str'` : all other strings
+  - `'all' `: sets all types
+  - ...
+
+【例】
+
+```python
+import numpy as np
+
+np.set_printoptions(precision=4)
+x = np.array([1.123456789])
+print(x)  # [1.1235]
+
+np.set_printoptions(threshold=20)
+x = np.arange(50)
+print(x)  # [ 0  1  2 ... 47 48 49]
+
+np.set_printoptions(threshold=np.iinfo(np.int).max)
+print(x)
+# [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
+#  24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47
+#  48 49]
+
+eps = np.finfo(float).eps
+x = np.arange(4.)
+x = x ** 2 - (x + eps) ** 2
+print(x)  
+# [-4.9304e-32 -4.4409e-16  0.0000e+00  0.0000e+00]
+np.set_printoptions(suppress=True)
+print(x)  # [-0. -0.  0.  0.]
+
+x = np.linspace(0, 10, 10)
+print(x)
+# [ 0.      1.1111  2.2222  3.3333  4.4444  5.5556  6.6667  7.7778  8.8889
+#  10.    ]
+np.set_printoptions(precision=2, suppress=True, threshold=5)
+print(x)  # [ 0.    1.11  2.22 ...  7.78  8.89 10.  ]
+
+np.set_printoptions(formatter={'all': lambda x: 'int: ' + str(-x)})
+x = np.arange(3)
+print(x)  # [int: 0 int: -1 int: -2]
+
+np.set_printoptions()  # formatter gets reset
+print(x)  # [0 1 2]
+```
+
+【例】恢复默认选项
+
+```python
+np.set_printoptions(edgeitems=3, infstr='inf', linewidth=75,
+                    nanstr='nan', precision=8, suppress=False, 
+                    threshold=1000, formatter=None)
+```
+
+【函数】
+
+```python
+def get_printoptions():
+    ...
+```
+
+`get_printoptions()`函数：获取当前打印选项。
+
+【例】
+
+```python
+import numpy as np
+
+x = np.get_printoptions()
+print(x)
+# {
+# 'edgeitems': 3, 
+# 'threshold': 1000, 
+# 'floatmode': 'maxprec', 
+# 'precision': 8, 
+# 'suppress': False, 
+# 'linewidth': 75, 
+# 'nanstr': 'nan', 
+# 'infstr': 'inf', 
+# 'sign': '-', 
+# 'formatter': None, 
+# 'legacy': False
+# }
+```
+
+# 第七章 随机抽样
+
+（略）
+
+# 第八章 统计相关
+
+## 一、次序统计
+
+### 计算最小值
+
+- `numpy.amin(a[, axis=None, out=None, keepdims=np._NoValue, initial=np._NoValue, where=np._NoValue])`：Return the minimum of an array or minimum along an axis.
+
+【例】计算最小值
+
+```python
+import numpy as np
+
+x = np.array([[11, 12, 13, 14, 15],
+              [16, 17, 18, 19, 20],
+              [21, 22, 23, 24, 25],
+              [26, 27, 28, 29, 30],
+              [31, 32, 33, 34, 35]])
+y = np.amin(x)
+print(y)  # 11
+
+y = np.amin(x, axis=0)
+print(y)  # [11 12 13 14 15]
+
+y = np.amin(x, axis=1)
+print(y)  # [11 16 21 26 31]
+```
+
+### 计算最大值
+
+- `numpy.amax(a[, axis=None, out=None, keepdims=np._NoValue, initial=np._NoValue, where=np._NoValue])`：Return the maximum of an array or maximum along an axis.
+
+【例】计算最大值
+
+```python
+import numpy as np
+
+x = np.array([[11, 12, 13, 14, 15],
+              [16, 17, 18, 19, 20],
+              [21, 22, 23, 24, 25],
+              [26, 27, 28, 29, 30],
+              [31, 32, 33, 34, 35]])
+y = np.amax(x)
+print(y)  # 35
+
+y = np.amax(x, axis=0)
+print(y)  # [31 32 33 34 35]
+
+y = np.amax(x, axis=1)
+print(y)  # [15 20 25 30 35]
+```
+
+### 计算极差
+
+- `numpy.ptp(a, axis=None, out=None, keepdims=np._NoValue)`： Range of values (maximum - minimum) along an axis. The name of the function comes from the acronym for 'peak to peak'.
+
+【例】计算极差
+
+```python
+import numpy as np
+
+np.random.seed(20200623)
+x = np.random.randint(0, 20, size=[4, 5])
+print(x)
+# [[10  2  1  1 16]
+#  [18 11 10 14 10]
+#  [11  1  9 18  8]
+#  [16  2  0 15 16]]
+
+print(np.ptp(x))  # 18
+print(np.ptp(x, axis=0))  # [ 8 10 10 17  8]
+print(np.ptp(x, axis=1))  # [15  8 17 16]
+```
+
+### 计算分位数
+
+- `numpy.percentile(a, q, axis=None, out=None, overwrite_input=False, interpolation='linear', keepdims=False)`： Compute the q-th percentile of the data along the specified axis. Returns the q-th percentile(s) of the array elements.
+  - `a`：array，用来算分位数的对象，可以是多维的数组。
+  - `q`：介于 0-100 的 float，用来计算是几分位的参数，如四分之一位就是 25，如要算两个位置的数就 [25, 75]。
+  - `axis`：坐标轴的方向，一维的就不用考虑了，多维的就用这个调整计算的维度方向，取值范围 0/1。
+
+【例】计算分位数
+
+```python
+import numpy as np
+
+np.random.seed(20200623)
+x = np.random.randint(0, 20, size=[4, 5])
+print(x)
+# [[10  2  1  1 16]
+#  [18 11 10 14 10]
+#  [11  1  9 18  8]
+#  [16  2  0 15 16]]
+
+print(np.percentile(x, [25, 50]))  
+# [ 2. 10.]
+
+print(np.percentile(x, [25, 50], axis=0))
+# [[10.75  1.75  0.75 10.75  9.5 ]
+#  [13.5   2.    5.   14.5  13.  ]]
+
+print(np.percentile(x, [25, 50], axis=1))
+# [[ 1. 10.  8.  2.]
+#  [ 2. 11.  9. 15.]]
+```
+
+------
+
+## 二、均值与方差
+
+### 计算中位数
+
+- `numpy.median(a, axis=None, out=None, overwrite_input=False, keepdims=False)` Compute the median along the specified axis. Returns the median of the array elements.
+
+【例】计算中位数
+
+```python
+import numpy as np
+
+np.random.seed(20200623)
+x = np.random.randint(0, 20, size=[4, 5])
+print(x)
+# [[10  2  1  1 16]
+#  [18 11 10 14 10]
+#  [11  1  9 18  8]
+#  [16  2  0 15 16]]
+print(np.percentile(x, 50))
+print(np.median(x))
+# 10.0
+
+print(np.percentile(x, 50, axis=0))
+print(np.median(x, axis=0))
+# [13.5  2.   5.  14.5 13. ]
+
+print(np.percentile(x, 50, axis=1))
+print(np.median(x, axis=1))
+# [ 2. 11.  9. 15.]
+```
+
+### 计算平均值
+
+- `numpy.mean(a[, axis=None, dtype=None, out=None, keepdims=np._NoValue)])`Compute the arithmetic mean along the specified axis.
+
+【例】计算平均值（沿轴的元素的总和除以元素的数量）
+
+```python
+import numpy as np
+
+x = np.array([[11, 12, 13, 14, 15],
+              [16, 17, 18, 19, 20],
+              [21, 22, 23, 24, 25],
+              [26, 27, 28, 29, 30],
+              [31, 32, 33, 34, 35]])
+y = np.mean(x)
+print(y)  # 23.0
+
+y = np.mean(x, axis=0)
+print(y)  # [21. 22. 23. 24. 25.]
+
+y = np.mean(x, axis=1)
+print(y)  # [13. 18. 23. 28. 33.]
+```
+
+### 计算加权平均值
+
+- `numpy.average(a[, axis=None, weights=None, returned=False])`Compute the weighted average along the specified axis.
+
+【例】计算加权平均值（将各数值乘以相应的权数，然后加总求和得到总体值，再除以总的单位数）
+
+```python
+import numpy as np
+
+x = np.array([[11, 12, 13, 14, 15],
+              [16, 17, 18, 19, 20],
+              [21, 22, 23, 24, 25],
+              [26, 27, 28, 29, 30],
+              [31, 32, 33, 34, 35]])
+y = np.average(x)
+print(y)  # 23.0
+
+y = np.average(x, axis=0)
+print(y)  # [21. 22. 23. 24. 25.]
+
+y = np.average(x, axis=1)
+print(y)  # [13. 18. 23. 28. 33.]
+
+
+y = np.arange(1, 26).reshape([5, 5])
+print(y)
+# [[ 1  2  3  4  5]
+#  [ 6  7  8  9 10]
+#  [11 12 13 14 15]
+#  [16 17 18 19 20]
+#  [21 22 23 24 25]]
+
+z = np.average(x, weights=y)
+print(z)  # 27.0
+
+z = np.average(x, axis=0, weights=y)
+print(z)
+# [25.54545455 26.16666667 26.84615385 27.57142857 28.33333333]
+
+z = np.average(x, axis=1, weights=y)
+print(z)
+# [13.66666667 18.25       23.15384615 28.11111111 33.08695652]
+```
+
+### 计算方差
+
+- `numpy.var(a[, axis=None, dtype=None, out=None, ddof=0, keepdims=np._NoValue])`Compute the variance along the specified axis.
+  - `ddof=0`：是“Delta Degrees of Freedom”，表示自由度的个数。
+
+要注意方差和样本方差的无偏估计，方差公式中分母上是 `n`；样本方差无偏估计公式中分母上是 `n-1`（`n` 为样本个数）。证明参见概率统计相关书籍。<br/>
+
+【例】计算方差
+
+```python
+import numpy as np
+
+x = np.array([[11, 12, 13, 14, 15],
+              [16, 17, 18, 19, 20],
+              [21, 22, 23, 24, 25],
+              [26, 27, 28, 29, 30],
+              [31, 32, 33, 34, 35]])
+y = np.var(x)
+print(y)  # 52.0
+y = np.mean((x - np.mean(x)) ** 2)
+print(y)  # 52.0
+
+y = np.var(x, ddof=1)
+print(y)  # 54.166666666666664
+y = np.sum((x - np.mean(x)) ** 2) / (x.size - 1)
+print(y)  # 54.166666666666664
+
+y = np.var(x, axis=0)
+print(y)  # [50. 50. 50. 50. 50.]
+
+y = np.var(x, axis=1)
+print(y)  # [2. 2. 2. 2. 2.]
+```
+
+### 计算标准差
+
+- `numpy.std(a[, axis=None, dtype=None, out=None, ddof=0, keepdims=np._NoValue])`Compute the standard deviation along the specified axis.
+
+标准差是一组数据平均值分散程度的一种度量，是方差的算数平方根。<br/>
+
+【例】计算标准差
+
+```python
+import numpy as np
+
+x = np.array([[11, 12, 13, 14, 15],
+              [16, 17, 18, 19, 20],
+              [21, 22, 23, 24, 25],
+              [26, 27, 28, 29, 30],
+              [31, 32, 33, 34, 35]])
+y = np.std(x)
+print(y)  # 7.211102550927978
+y = np.sqrt(np.var(x))
+print(y)  # 7.211102550927978
+
+y = np.std(x, axis=0)
+print(y)
+# [7.07106781 7.07106781 7.07106781 7.07106781 7.07106781]
+
+y = np.std(x, axis=1)
+print(y)
+# [1.41421356 1.41421356 1.41421356 1.41421356 1.41421356]
+```
+
+------
+
+## 三、相关性的衡量
+
+### 计算协方差矩阵
+
+- `numpy.cov(m, y=None, rowvar=True, bias=False, ddof=None, fweights=None,aweights=None)` Estimate a covariance matrix, given data and weights.
+
+【例】计算协方差矩阵
+
+```python
+import numpy as np
+
+x = [1, 2, 3, 4, 6]
+y = [0, 2, 5, 6, 7]
+print(np.cov(x))  # 3.7   #样本方差
+print(np.cov(y))  # 8.5   #样本方差
+print(np.cov(x, y))
+# [[3.7  5.25]
+#  [5.25 8.5 ]]
+
+print(np.var(x))  # 2.96    #方差
+print(np.var(x, ddof=1))  # 3.7    #样本方差
+print(np.var(y))  # 6.8    #方差
+print(np.var(y, ddof=1))  # 8.5    #样本方差
+
+z = np.mean((x - np.mean(x)) * (y - np.mean(y)))    #协方差
+print(z)  # 4.2
+
+z = np.sum((x - np.mean(x)) * (y - np.mean(y))) / (len(x) - 1)   #样本协方差
+print(z)  # 5.25
+
+z = np.dot(x - np.mean(x), y - np.mean(y)) / (len(x) - 1)     #样本协方差     
+print(z)  # 5.25
+```
+
+### 计算相关系数
+
+- `numpy.corrcoef(x, y=None, rowvar=True, bias=np._NoValue, ddof=np._NoValue)` Return Pearson product-moment correlation coefficients.
+
+理解了 `np.cov()` 函数之后，很容易理解 `np.correlate()` 函数，二者的参数几乎一样。<br/>
+
+`np.cov()` 函数描述的是两个向量协同变化的程度，它的取值可能非常大，也可能非常小，这就导致没办法直观地衡量二者协同变化的程度。相关系数实际上是正则化的协方差，`n` 个变量的相关系数形成一个 `n` 维方针。<br/>
+
+【例】计算相关系数
+
+```python
+import numpy as np
+
+np.random.seed(20200623)
+x, y = np.random.randint(0, 20, size=(2, 4))
+
+print(x)  # [10  2  1  1]
+print(y)  # [16 18 11 10]
+
+z = np.corrcoef(x, y)
+print(z)
+# [[1.         0.48510096]
+#  [0.48510096 1.        ]]
+
+a = np.dot(x - np.mean(x), y - np.mean(y))
+b = np.sqrt(np.dot(x - np.mean(x), x - np.mean(x)))
+c = np.sqrt(np.dot(y - np.mean(y), y - np.mean(y)))
+print(a / (b * c))  # 0.4851009629263671
+```
+
+------
+
+## 四、其它
+
+### 直方图
+
+- `numpy.digitize(x, bins, right=False)`Return the indices of the bins to which each value in input array belongs.
+  - `x`：numpy 数组
+  - `bins`：一维单调数组，必须是升序或者降序
+  - `right`：间隔是否包含最右
+  - 返回值：x 在 bins 中的位置。
+
+【例】
+
+```python
+import numpy as np
+
+x = np.array([0.2, 6.4, 3.0, 1.6])
+bins = np.array([0.0, 1.0, 2.5, 4.0, 10.0])
+inds = np.digitize(x, bins)
+print(inds)  # [1 4 3 2]
+for n in range(x.size):
+    print(bins[inds[n] - 1], "<=", x[n], "<", bins[inds[n]])
+
+# 0.0 <= 0.2 < 1.0
+# 4.0 <= 6.4 < 10.0
+# 2.5 <= 3.0 < 4.0
+# 1.0 <= 1.6 < 2.5
+```
+
+【例】
+
+```python
+import numpy as np
+
+x = np.array([1.2, 10.0, 12.4, 15.5, 20.])
+bins = np.array([0, 5, 10, 15, 20])
+inds = np.digitize(x, bins, right=True)
+print(inds)  # [1 2 3 4 4]
+
+inds = np.digitize(x, bins, right=False)
+print(inds)  # [1 3 3 4 5]
+```
+
+# 第九章 线性代数
+
+## 一、线性代数基础
+
+Numpy 定义了 `matrix` 类型，使用该 `matrix` 类型创建的是矩阵对象，它们的加减乘除运算缺省采用矩阵方式计算，因此用法和Matlab 十分类似。但是由于 NumPy 中同时存在 `ndarray` 和 `matrix` 对象，因此用户很容易将两者弄混。这有违 Python 的“显式优于隐式”的原则，因此官方并不推荐在程序中使用 `matrix`。在这里，我们仍然用 `ndarray` 来介绍。
+
+### 矩阵和向量积
+
+矩阵的定义、矩阵的加法、矩阵的数乘、矩阵的转置与二维数组完全一致，不再进行说明，但矩阵的乘法有不同的表示。
+
+- `numpy.dot(a, b[, out])`：计算两个矩阵的乘积，如果是一维数组则是它们的内积。
+
+【例1】
+
+```python
+import numpy as np
+
+x = np.array([1, 2, 3, 4, 5])
+y = np.array([2, 3, 4, 5, 6])
+z = np.dot(x, y)
+print(z)  # 70
+
+x = np.array([[1, 2, 3], [3, 4, 5], [6, 7, 8]])
+print(x)
+# [[1 2 3]
+#  [3 4 5]
+#  [6 7 8]]
+
+y = np.array([[5, 4, 2], [1, 7, 9], [0, 4, 5]])
+print(y)
+# [[5 4 2]
+#  [1 7 9]
+#  [0 4 5]]
+
+z = np.dot(x, y)
+print(z)
+# [[  7  30  35]
+#  [ 19  60  67]
+#  [ 37 105 115]]
+
+z = np.dot(y, x)
+print(z)
+# [[ 29  40  51]
+#  [ 76  93 110]
+#  [ 42  51  60]]
+```
+
+【注】：线代中的维数和数组的维数不同。如线代中提到的 n 维行向量在 Numpy 中是一维数组，而线代中的 n 维列向量在 Numpy 中是一个 shape 为 (n, 1) 的二维数组。
+
+------
+
+### 矩阵特征值与特征向量
+
+- `numpy.linalg.eig(a)` ：计算方阵的特征值和特征向量。
+- `numpy.linalg.eigvals(a)` ：计算方阵的特征值。
+
+【例1】求方阵的特征值和特征向量
+
+```python
+import numpy as np
+
+# 创建一个对角矩阵
+x = np.diag((1, 2, 3))  
+print(x)
+# [[1 0 0]
+#  [0 2 0]
+#  [0 0 3]]
+
+print(np.linalg.eigvals(x))
+# [1. 2. 3.]
+
+a, b = np.linalg.eig(x)  
+# 特征值保存在a中，特征向量保存在b中
+print(a)
+# [1. 2. 3.]
+print(b)
+# [[1. 0. 0.]
+#  [0. 1. 0.]
+#  [0. 0. 1.]]
+
+# 检验特征值与特征向量是否正确
+for i in range(3): 
+    if np.allclose(a[i] * b[:, i], np.dot(x, b[:, i])):
+        print('Right')
+    else:
+        print('Error')
+# Right
+# Right
+# Right
+```
+
+【例2】判断对称矩阵是否为正定阵（特征值是否全部为正）。
+
+```python
+import numpy as np
+
+A = np.arange(16).reshape(4, 4)
+print(A)
+# [[ 0  1  2  3]
+#  [ 4  5  6  7]
+#  [ 8  9 10 11]
+#  [12 13 14 15]]
+
+A = A + A.T  # 将方阵转换成对称阵
+print(A)
+# [[ 0  5 10 15]
+#  [ 5 10 15 20]
+#  [10 15 20 25]
+#  [15 20 25 30]]
+
+B = np.linalg.eigvals(A)  # 求A的特征值
+print(B)
+# [ 6.74165739e+01 -7.41657387e+00  1.82694656e-15 -1.72637110e-15]
+
+# 判断是不是所有的特征值都大于0，用到了all函数，显然对称阵A不是正定的
+if np.all(B > 0):
+    print('Yes')
+else:
+    print('No')
+# No
+```
+
+## 二、矩阵分解
+
+### 奇异值分解
+
