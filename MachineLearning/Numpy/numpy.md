@@ -5937,3 +5937,437 @@ else:
 
 ### 奇异值分解
 
+奇异值分解的原理：[SVD及其应用](https://mp.weixin.qq.com/s/GNHPamltnqaUpGG9NhvWxg)
+
+- `u, s, v = numpy.linalg.svd(a, full_matrices=True, compute_uv=True, hermitian=False)`：奇异值分解
+  - `a` 是一个形如 (M,N) 的矩阵
+  - `full_matrices` 的取值是为 False 或者 True，默认值为 True，这时 `u` 的大小为 (M, M)，`v` 的大小为 (N, N)。否则 `u` 的大小为(M, K)，`v` 的大小为 (K, N)，K = min(M, N)。
+  - `compute_uv` 的取值是为 False 或者 True，默认值为 True，表示计算 `u,s,v`。为 False 的时候只计算 `s`。
+  - 总共有三个返回值 `u,s,v`，`u `大小为 (M, M)，`s`大小为(M,N)，`v`大小为(N,N)，`a = u*s*v`。
+  - 其中`s`是对矩阵`a`的奇异值分解。`s`除了对角元素不为`0`，其他元素都为`0`，并且对角元素从大到小排列。`s`中有`n`个奇异值，一般排在后面的比较接近0，所以仅保留比较大的`r`个奇异值。
+
+【注】：Numpy 中返回的 `v` 是通常所谓奇异值分解 `a = u * s * v` 中 `v` 的转置。<br/>
+
+【例1】
+
+````python
+import numpy as np
+
+A = np.array([[4, 11, 14], [8, 7, -2]])
+print(A)
+# [[ 4 11 14]
+#  [ 8  7 -2]]
+
+u, s, vh = np.linalg.svd(A, full_matrices=False)
+print(u.shape)  # (2, 2)
+print(u)
+# [[-0.9486833  -0.31622777]
+#  [-0.31622777  0.9486833 ]]
+
+print(s.shape)  # (2,)
+print(np.diag(s))
+# [[18.97366596  0.        ]
+#  [ 0.          9.48683298]]
+
+print(vh.shape)  # (2, 3)
+print(vh)
+# [[-0.33333333 -0.66666667 -0.66666667]
+#  [ 0.66666667  0.33333333 -0.66666667]]
+
+a = np.dot(u, np.diag(s))
+a = np.dot(a, vh)
+print(a)
+# [[ 4. 11. 14.]
+#  [ 8.  7. -2.]]
+````
+
+【例2】
+
+```python
+import numpy as np
+
+A = np.array([[1, 1], [1, -2], [2, 1]])
+print(A)
+# [[ 1  1]
+#  [ 1 -2]
+#  [ 2  1]]
+
+u, s, vh = np.linalg.svd(A, full_matrices=False)
+print(u.shape)  # (3, 2)
+print(u)
+# [[-5.34522484e-01 -1.11022302e-16]
+#  [ 2.67261242e-01 -9.48683298e-01]
+#  [-8.01783726e-01 -3.16227766e-01]]
+
+print(s.shape)  # (2,)
+print(np.diag(s))
+# [[2.64575131 0.        ]
+#  [0.         2.23606798]]
+
+print(vh.shape)  # (2, 2)
+print(vh)
+# [[-0.70710678 -0.70710678]
+#  [-0.70710678  0.70710678]]
+
+a = np.dot(u, np.diag(s))
+a = np.dot(a, vh)
+print(a)
+# [[ 1.  1.]
+#  [ 1. -2.]
+#  [ 2.  1.]]
+```
+
+### QR 分解
+
+- `q,r = numpy.linalg.qr(a, mode='reduced')`计算矩阵`a`的QR分解。
+  - `a`是一个(M, N)的待分解矩阵。
+  - `mode = reduced`：返回(M, N)的列向量两两正交的矩阵`q`，和(N, N)的三角阵`r`（Reduced QR分解）。
+  - `mode = complete`：返回(M, M)的正交矩阵`q`，和(M, N)的三角阵`r`（Full QR分解）。
+
+【例1】
+
+```python
+import numpy as np
+
+A = np.array([[2, -2, 3], [1, 1, 1], [1, 3, -1]])
+print(A)
+# [[ 2 -2  3]
+#  [ 1  1  1]
+#  [ 1  3 -1]]
+
+q, r = np.linalg.qr(A)
+print(q.shape)  # (3, 3)
+print(q)
+# [[-0.81649658  0.53452248  0.21821789]
+#  [-0.40824829 -0.26726124 -0.87287156]
+#  [-0.40824829 -0.80178373  0.43643578]]
+
+print(r.shape)  # (3, 3)
+print(r)
+# [[-2.44948974  0.         -2.44948974]
+#  [ 0.         -3.74165739  2.13808994]
+#  [ 0.          0.         -0.65465367]]
+
+print(np.dot(q, r))
+# [[ 2. -2.  3.]
+#  [ 1.  1.  1.]
+#  [ 1.  3. -1.]]
+
+a = np.allclose(np.dot(q.T, q), np.eye(3))
+print(a)  # True
+```
+
+【例2】
+
+```python
+import numpy as np
+
+A = np.array([[1, 1], [1, -2], [2, 1]])
+print(A)
+# [[ 1  1]
+#  [ 1 -2]
+#  [ 2  1]]
+
+q, r = np.linalg.qr(A, mode='complete')
+print(q.shape)  # (3, 3)
+print(q)
+# [[-0.40824829  0.34503278 -0.84515425]
+#  [-0.40824829 -0.89708523 -0.16903085]
+#  [-0.81649658  0.27602622  0.50709255]]
+
+print(r.shape)  # (3, 2)
+print(r)
+# [[-2.44948974 -0.40824829]
+#  [ 0.          2.41522946]
+#  [ 0.          0.        ]]
+
+print(np.dot(q, r))
+# [[ 1.  1.]
+#  [ 1. -2.]
+#  [ 2.  1.]]
+
+a = np.allclose(np.dot(q, q.T), np.eye(3))
+print(a)  # True
+```
+
+【例3】
+
+```python
+import numpy as np
+
+A = np.array([[1, 1], [1, -2], [2, 1]])
+print(A)
+# [[ 1  1]
+#  [ 1 -2]
+#  [ 2  1]]
+
+q, r = np.linalg.qr(A)
+print(q.shape)  # (3, 2)
+print(q)
+# [[-0.40824829  0.34503278]
+#  [-0.40824829 -0.89708523]
+#  [-0.81649658  0.27602622]]
+
+print(r.shape)  # (2, 2)
+print(r)
+# [[-2.44948974 -0.40824829]
+#  [ 0.          2.41522946]]
+
+print(np.dot(q, r))
+# [[ 1.  1.]
+#  [ 1. -2.]
+#  [ 2.  1.]]
+
+a = np.allclose(np.dot(q.T, q), np.eye(2))
+print(a)  # True   （说明q为正交矩阵）
+```
+
+### Cholesky 分解
+
+- `L = numpy.linalg.cholesky(a)` 返回正定矩阵`a`的 Cholesky 分解`a = L*L.T`，其中`L`是下三角。
+
+【例1】
+
+```python
+import numpy as np
+
+A = np.array([[1, 1, 1, 1], [1, 3, 3, 3],
+              [1, 3, 5, 5], [1, 3, 5, 7]])
+print(A)
+# [[1 1 1 1]
+#  [1 3 3 3]
+#  [1 3 5 5]
+#  [1 3 5 7]]
+
+print(np.linalg.eigvals(A))
+# [13.13707118  1.6199144   0.51978306  0.72323135]
+
+L = np.linalg.cholesky(A)
+print(L)
+# [[1.         0.         0.         0.        ]
+#  [1.         1.41421356 0.         0.        ]
+#  [1.         1.41421356 1.41421356 0.        ]
+#  [1.         1.41421356 1.41421356 1.41421356]]
+
+print(np.dot(L, L.T))
+# [[1. 1. 1. 1.]
+#  [1. 3. 3. 3.]
+#  [1. 3. 5. 5.]
+#  [1. 3. 5. 7.]]
+```
+
+------
+
+## 三、范数和其它数字
+
+### 矩阵的范数
+
+- `numpy.linalg.norm(x, ord=None, axis=None, keepdims=False)` 计算向量或者矩阵的范数。
+
+【例1】求向量的范数。
+
+```python
+import numpy as np
+
+x = np.array([1, 2, 3, 4])
+
+print(np.linalg.norm(x, ord=1)) 
+# 10.0
+print(np.sum(np.abs(x)))  
+# 10
+
+print(np.linalg.norm(x, ord=2))  
+# 5.477225575051661
+print(np.sum(np.abs(x) ** 2) ** 0.5)  
+# 5.477225575051661
+
+print(np.linalg.norm(x, ord=-np.inf))  
+# 1.0
+print(np.min(np.abs(x)))  
+# 1
+
+print(np.linalg.norm(x, ord=np.inf))  
+# 4.0
+print(np.max(np.abs(x)))  
+# 4
+```
+
+【例2】求矩阵的范数。
+
+```python
+import numpy as np
+
+A = np.array([[1, 2, 3, 4], [2, 3, 5, 8],
+              [1, 3, 5, 7], [3, 4, 7, 11]])
+
+print(A)
+# [[ 1  2  3  4]
+#  [ 2  3  5  8]
+#  [ 1  3  5  7]
+#  [ 3  4  7 11]]
+
+print(np.linalg.norm(A, ord=1))  # 30.0
+print(np.max(np.sum(A, axis=0)))  # 30
+
+print(np.linalg.norm(A, ord=2))  
+# 20.24345358700576
+print(np.max(np.linalg.svd(A, compute_uv=False)))  
+# 20.24345358700576
+
+print(np.linalg.norm(A, ord=np.inf))  # 25.0
+print(np.max(np.sum(A, axis=1)))  # 25
+
+print(np.linalg.norm(A, ord='fro'))  
+# 20.273134932713294
+print(np.sqrt(np.trace(np.dot(A.T, A))))  
+# 20.273134932713294
+```
+
+### 方阵的行列式
+
+- `numpy.linalg.det(a)` 计算行列式。
+
+【例】计算行列式。
+
+```python
+import numpy as np
+
+x = np.array([[1, 2], [3, 4]])
+print(x)
+# [[1 2]
+#  [3 4]]
+
+print(np.linalg.det(x))
+# -2.0000000000000004
+```
+
+### 矩阵的秩
+
+- `numpy.linalg.matrix_rank(M, tol=None, hermitian=False)` 返回矩阵的秩。
+
+【例】计算矩阵的秩。
+
+```python
+import numpy as np
+
+I = np.eye(3)  # 先创建一个单位阵
+print(I)
+# [[1. 0. 0.]
+#  [0. 1. 0.]
+#  [0. 0. 1.]]
+
+r = np.linalg.matrix_rank(I)
+print(r)  # 3
+
+I[1, 1] = 0  # 将该元素置为0
+print(I)
+# [[1. 0. 0.]
+#  [0. 0. 0.]
+#  [0. 0. 1.]]
+
+r = np.linalg.matrix_rank(I)  # 此时秩变成2
+print(r)  # 2
+```
+
+### 矩阵的迹
+
+- `numpy.trace(a, offset=0, axis1=0, axis2=1, dtype=None, out=None)` 方阵的迹就是主对角元素之和。
+
+【例】计算方阵的迹。
+
+```python
+import numpy as np
+
+x = np.array([[1, 2, 3], [3, 4, 5], [6, 7, 8]])
+print(x)
+# [[1 2 3]
+#  [3 4 5]
+#  [6 7 8]]
+
+y = np.array([[5, 4, 2], [1, 7, 9], [0, 4, 5]])
+print(y)
+# [[5 4 2]
+#  [1 7 9]
+#  [0 4 5]]
+
+print(np.trace(x))  # A的迹等于A.T的迹
+# 13
+print(np.trace(np.transpose(x)))
+# 13
+
+print(np.trace(x + y))  # 和的迹 等于 迹的和
+# 30
+print(np.trace(x) + np.trace(y))
+# 30
+```
+
+## 四、解方程和逆矩阵
+
+### 逆矩阵（inverse matrix）
+
+设 A 是数域上的一个 n 阶矩阵，若在相同数域上存在另一个 n 阶矩阵 B，使得：`AB = BA = E`（E 为单位矩阵），则称 B 是 A 的逆矩阵，而 A 被称为可逆矩阵。
+
+- `numpy.linalg.inv(a)` ：计算矩阵`a`的逆矩阵（矩阵可逆的充要条件：`det(a) != 0`，或者`a`满秩）。
+
+【例】计算矩阵的逆矩阵。
+
+```python
+import numpy as np
+
+A = np.array([[1, -2, 1], [0, 2, -1], [1, 1, -2]])
+print(A)
+# [[ 1 -2  1]
+#  [ 0  2 -1]
+#  [ 1  1 -2]]
+
+# 求A的行列式，不为零则存在逆矩阵
+A_det = np.linalg.det(A)  
+print(A_det)
+# -2.9999999999999996
+
+A_inverse = np.linalg.inv(A)  # 求A的逆矩阵
+print(A_inverse)
+# [[ 1.00000000e+00  1.00000000e+00 -1.11022302e-16]
+#  [ 3.33333333e-01  1.00000000e+00 -3.33333333e-01]
+#  [ 6.66666667e-01  1.00000000e+00 -6.66666667e-01]]
+
+x = np.allclose(np.dot(A, A_inverse), np.eye(3))
+print(x)  # True
+x = np.allclose(np.dot(A_inverse, A), np.eye(3))
+print(x)  # True
+
+A_companion = A_inverse * A_det  # 求A的伴随矩阵
+print(A_companion)
+# [[-3.00000000e+00 -3.00000000e+00  3.33066907e-16]
+#  [-1.00000000e+00 -3.00000000e+00  1.00000000e+00]
+#  [-2.00000000e+00 -3.00000000e+00  2.00000000e+00]]
+```
+
+### 求解线性方程组
+
+- `numpy.linalg.solve(a, b)` 求解线性方程组或矩阵方程。
+
+【例】求解线性矩阵方程。
+
+```python
+#  x + 2y +  z = 7
+# 2x -  y + 3z = 7
+# 3x +  y + 2z =18
+
+import numpy as np
+
+A = np.array([[1, 2, 1], [2, -1, 3], [3, 1, 2]])
+b = np.array([7, 7, 18])
+x = np.linalg.solve(A, b)
+print(x)  # [ 7.  1. -2.]
+
+x = np.linalg.inv(A).dot(b)
+print(x)  # [ 7.  1. -2.]
+
+y = np.allclose(np.dot(A, x), b)
+print(y)  # True
+```
+
+# 最终章 大作业
+
+未完待续……
