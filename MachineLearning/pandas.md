@@ -1075,3 +1075,7 @@ df.describe()
 【NOTE】更全面的数据汇总
 
 `info`，`describe` 只能实现较少信息的展示，如果想要对一份数据集进行全面且有效的观察，特别是在列较多的情况下，推荐使用 `pandas-profiling` 包，它将在第十一章被再次提到。
+
+### 2. 特征统计函数
+
+在 `Series` 和 `DataFrame` 上定义了许多统计函数，最常见的是 `sum`，`mean`，`median`，`var`，`std`，`max`，`min`。例如，选出身高和体重列进行演示：
